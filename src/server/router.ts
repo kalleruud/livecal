@@ -45,9 +45,7 @@ async function renderHomePage(host: string): Promise<string> {
   return template.replace('{{ENDPOINTS}}', renderEndpoints(host))
 }
 
-export async function handleRequest(
-  req: Request,
-): Promise<Response> {
+export async function handleRequest(req: Request): Promise<Response> {
   const url = new URL(req.url)
 
   if (url.pathname === '/') {

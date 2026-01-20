@@ -56,11 +56,11 @@ function competitionToIcsEvent(
   results?: IBUResult[],
 ): IcsEvent {
   const isCompleted = competition.StatusId >= 10
-  const disciplineEmoji = DISCIPLINE_EMOJI[competition.DisciplineId] || ''
-  const genderEmoji = GENDER_EMOJI[competition.catId] || ''
-  const completedEmoji = isCompleted ? '✅ ' : ''
+  const emoji = isCompleted
+    ? '✅'
+    : (DISCIPLINE_EMOJI[competition.DisciplineId] || '📅')
 
-  let description = `${competition.Description}\n\nLocation: ${competition.Location}`
+  let description = competition.Description
   if (results && results.length > 0) {
     description += `\n\nTop 10 Results:\n${formatResults(results)}`
   }
@@ -73,9 +73,9 @@ function competitionToIcsEvent(
     stamp: { date: new Date() },
     start: { date: startTime },
     end: { date: endTime },
-    summary: `${completedEmoji}${disciplineEmoji}${genderEmoji} ${competition.ShortDescription}`,
+    summary: `${emoji} ${competition.ShortDescription}`,
     description,
-    location: `${event.ShortDescription}, ${event.Organizer}`,
+    location: `${competition.Location}, ${event.ShortDescription}`,
     url: buildCompetitionUrl(competition),
   }
 }

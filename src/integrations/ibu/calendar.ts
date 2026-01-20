@@ -29,7 +29,10 @@ function formatResults(
   const filtered = results.filter((r) => r.IsTeam === isRelay)
   const top10 = filtered.slice(0, 10)
   return top10
-    .map((r) => `${r.Rank}. ${r.ShortName} (${r.Nat}) - ${r.TotalTime}`)
+    .map((r) => {
+      const name = isRelay ? r.ShortName : `${r.ShortName} (${r.Nat})`
+      return `${r.Rank}. ${name} - ${r.TotalTime}`
+    })
     .join('\n')
 }
 

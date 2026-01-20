@@ -1,23 +1,78 @@
-# Integrations
+# IBU Biathlon World Cup Integration
 
-## [IBU Biathlon World Cup](https://www.biathlonworld.com/calendar)
+> **Note:** This file will be moved to `src/integrations/ibu/README.md` when the source structure is created.
 
-Fetches data from api and exposes webcal on server `webcal://<origin>/api/ibu/wc.ics`
+## Overview
 
-- Fetches all competitions on each Event.
-- Each competition is converted into a calendar event.
-- Include header `Content-Type: application/json; charset=utf-8` to get JSON.
-- Optinal parameters:
-  - Season (defaults to all available seasons).
-  - Men/Women (Default: Both)
-  - Flag for returning Events as calendar event (Default: `false`)
-  - Flag for returning Competitions as calendar event. (Default: `true`)
-  > Returns bad request if both flags are `false`.
-- Season ids are formattes as `<startyear><endyear>`, e.g. `2425` and `2526`
-- Updates description with top 10 if result is available.
-- URL is generated for each calendar event:
-  - Event `https://www.biathlonworld.com/calendar?CupLevel=1&SeasonId=2526&EventId=BT2526SWRLCP06`
-  - Competition `https://www.biathlonworld.com/results/<CompetitionId>`
+Fetches data from [IBU Biathlon World Cup](https://www.biathlonworld.com/calendar) API and exposes webcal endpoints.
+
+**Endpoint:** `webcal://<origin>/api/ibu/wc.ics`
+
+## Features
+
+- Fetches all competitions for each Event
+- Each competition is converted into a calendar event
+- Updates description with top 10 results when available
+- Event titles prefixed with emojis based on discipline and gender
+- Completed events marked with ✅
+
+## Query Parameters
+
+All parameters are optional.
+
+| Parameter      | Type    | Default | Description                              |
+| -------------- | ------- | ------- | ---------------------------------------- |
+| `season`       | string  | all     | Season ID (e.g., `2526` for 2025/2026)   |
+| `gender`       | string  | both    | Filter by gender: `M` or `W`.            |
+| `includeEvents`| boolean | false   | Include parent events as calendar events |
+| `includeComps` | boolean | true    | Include competitions as calendar events  |
+
+> **Note:** Returns `400 Bad Request` if both `includeEvents` and `includeComps` are `false`.
+
+### Season ID Format
+
+Season IDs follow the pattern `<start-year-2-digit><end-year-2-digit>`:
+- `2425` = 2024/2025 season
+- `2526` = 2025/2026 season
+
+### Example Requests
+
+```bash
+# Default: All seasons, both genders, competitions only
+curl "http://localhost:3000/api/ibu/wc.ics"
+
+# Specific season
+curl "http://localhost:3000/api/ibu/wc.ics?season=2526"
+
+# Women only
+curl "http://localhost:3000/api/ibu/wc.ics?gender=W"
+
+# Include events, exclude competitions
+curl "http://localhost:3000/api/ibu/wc.ics?includeEvents=true&includeComps=false"
+
+# Get JSON response
+curl -H "Content-Type: application/json; charset=utf-8" \
+  "http://localhost:3000/api/ibu/wc.ics"
+```
+
+## Generated Calendar Event URLs
+
+- **Event:** `https://www.biathlonworld.com/calendar?CupLevel=1&SeasonId=2526&EventId=BT2526SWRLCP06`
+- **Competition:** `https://www.biathlonworld.com/results/<CompetitionId>`
+
+## Emoji Mapping
+
+| Emoji | Meaning                |
+| ----- | ---------------------- |
+| 🎿    | Sprint                 |
+| 🏃    | Pursuit                |
+| 🎯    | Individual             |
+| 👥    | Mass Start             |
+| 🔄    | Relay                  |
+| 🏆    | Championship           |
+| ♂️    | Men's event            |
+| ♀️    | Women's event          |
+| ✅    | Completed (has results)|
 
 ### Events
 
@@ -104,6 +159,7 @@ Fetches data from api and exposes webcal on server `webcal://<origin>/api/ibu/wc
 ### Results
 
 - URL: [`https://bw.biathlonresults.com/modules/sportapi/api/Results?RaceId=BT2526SWRLCP05SMPU&Language=en`](https://bw.biathlonresults.com/modules/sportapi/api/Results?RaceId=BT2526SWRLCP05SMPU&Language=en)
+- Only fetched when `Competition.StatusId >= 10` (indicates results are available)
 
 - Output:
   ```json
@@ -213,3 +269,216 @@ Fetches data from api and exposes webcal on server `webcal://<origin>/api/ibu/wc
     ]
   }
   ```
+
+## Implementation Notes
+
+### Service Implementation
+
+```typescript
+// src/integrations/ibu/service.ts
+import type { Hono } from "hono";
+import type { VCalendar } from "ts-ics";
+import type {
+  IntegrationConfig,
+  IntegrationService,
+  QueryParams,
+} from "../interface";
+import { fetchEvents, fetchCompetitions, fetchResults } from "./api";
+import { buildCalendar } from "./calendar";
+
+const config: IntegrationConfig = {
+  id: "ibu",
+  name: "IBU Biathlon World Cup",
+  basePath: "/api/ibu",
+};
+
+export class IBUIntegration implements IntegrationService {
+  readonly config = config;
+
+  async getCalendar(params: QueryParams): Promise<VCalendar> {
+    const seasons = params.season ? [params.season as string] : await this.getAvailableSeasons();
+    const events = await fetchEvents(seasons);
+    const competitions = await fetchCompetitions(events, params.gender as string);
+    const results = await fetchResults(competitions);
+
+    return buildCalendar(events, competitions, results, params);
+  }
+
+  registerRoutes(app: Hono): void {
+    app.get(`${this.config.basePath}/wc.ics`, async (c) => {
+      const params = this.parseParams(c.req.query());
+      const error = this.validateParams(params);
+      if (error) return c.text(error, 400);
+
+      const calendar = await this.getCalendar(params);
+      const contentType = c.req.header("Content-Type");
+
+      if (contentType?.includes("application/json")) {
+        return c.json(calendar);
+      }
+      return c.text(calendar.toString(), 200, {
+        "Content-Type": "text/calendar; charset=utf-8",
+      });
+    });
+  }
+
+  validateParams(params: QueryParams): string | null {
+    if (params.includeEvents === false && params.includeComps === false) {
+      return "At least one of includeEvents or includeComps must be true";
+    }
+    if (params.gender && !["M", "W"].includes(params.gender as string)) {
+      return "Gender must be 'M' or 'W'";
+    }
+    return null;
+  }
+
+  getCacheKey(params: QueryParams): string {
+    const season = params.season || "all";
+    const gender = params.gender || "both";
+    return `ibu-wc-${season}-${gender}`;
+  }
+
+  private parseParams(query: Record<string, string>): QueryParams {
+    return {
+      season: query.season,
+      gender: query.gender,
+      includeEvents: query.includeEvents === "true",
+      includeComps: query.includeComps !== "false", // default true
+    };
+  }
+
+  private async getAvailableSeasons(): Promise<string[]> {
+    // Return current and previous season
+    const now = new Date();
+    const year = now.getFullYear() % 100;
+    const month = now.getMonth();
+    // Season starts in October
+    const currentSeason = month >= 9 ? `${year}${year + 1}` : `${year - 1}${year}`;
+    const prevSeason = month >= 9 ? `${year - 1}${year}` : `${year - 2}${year - 1}`;
+    return [prevSeason, currentSeason];
+  }
+}
+```
+
+### TypeScript Types
+
+```typescript
+// src/integrations/ibu/types.ts
+
+interface IBUEvent {
+  SeasonId: string;
+  EventId: string;
+  StartDate: string;
+  EndDate: string;
+  FirstCompetitionDate: string | null;
+  Description: string;
+  ShortDescription: string; // Location name
+  Organizer: string;
+  Nat: string;
+  NatLong: string;
+  EventClassificationId: string;
+  Level: number; // 1 = World Cup
+  UTCOffset: number;
+  IsActual: boolean;
+  IsCurrent: boolean;
+}
+
+interface IBUCompetition {
+  RaceId: string;
+  km: string;
+  catId: "SM" | "SW" | "MX"; // Men, Women, Mixed
+  DisciplineId: "SP" | "PU" | "IN" | "SI" | "MS" | "RL" | "SR";
+  StatusId: number;
+  StatusText: string;
+  StartTime: string;
+  Description: string;
+  ShortDescription: string;
+  Location: string;
+  LocalUTCOffset: number;
+}
+
+interface IBUResult {
+  ResultOrder: number;
+  Name: string;
+  ShortName: string;
+  Nat: string;
+  Rank: string;
+  Shootings: string;
+  TotalTime: string;
+  Behind: string;
+}
+
+interface IBUResultsResponse {
+  RaceId: string;
+  IsResult: boolean;
+  Competition: IBUCompetition;
+  SportEvt: IBUEvent;
+  Results: IBUResult[];
+}
+```
+
+### Discipline Codes
+
+| Code | Discipline       |
+| ---- | ---------------- |
+| SP   | Sprint           |
+| PU   | Pursuit          |
+| IN   | Individual       |
+| SI   | Short Individual |
+| MS   | Mass Start       |
+| RL   | Relay            |
+| SR   | Single Mixed Relay |
+
+### Category Codes
+
+| Code | Category    |
+| ---- | ----------- |
+| SM   | Senior Men  |
+| SW   | Senior Women|
+| MX   | Mixed       |
+
+### Event Levels
+
+| Level | Description           |
+| ----- | --------------------- |
+| 1     | World Cup             |
+| 2     | IBU Cup               |
+| 3     | Junior Championships  |
+| 4     | Other                 |
+
+### Caching Strategy
+
+1. Cache key: `ibu-wc-{seasonId}.json`
+2. Cache location: `$CACHE_DIR/ibu/`
+3. Update frequency: Configured via `CACHE_CRON` environment variable
+4. Cache invalidation: Automatic on CRON schedule
+
+### Data Flow
+
+```
+┌─────────────────┐     ┌──────────────┐     ┌─────────────────┐
+│  IBU Events API │────▶│ Cache Layer  │────▶│ Calendar Builder│
+└─────────────────┘     └──────────────┘     └─────────────────┘
+         │                                            │
+         ▼                                            ▼
+┌─────────────────┐                          ┌─────────────────┐
+│ IBU Competitions│                          │   ICS Output    │
+│      API        │                          │  (via ts-ics)   │
+└─────────────────┘                          └─────────────────┘
+         │
+         ▼
+┌─────────────────┐
+│ IBU Results API │
+│  (if available) │
+└─────────────────┘
+```
+
+### Error Handling
+
+| HTTP Status | Condition                                  |
+| ----------- | ------------------------------------------ |
+| 200         | Success                                    |
+| 400         | Invalid parameters (e.g., both flags false)|
+| 404         | Season not found                           |
+| 502         | IBU API unavailable                        |
+| 503         | Service temporarily unavailable            |

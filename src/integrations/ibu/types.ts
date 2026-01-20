@@ -35,6 +35,7 @@ export interface IBUCompetition {
 
 export interface IBUResult {
   ResultOrder: number
+  IsTeam: boolean
   Name: string
   ShortName: string
   Nat: string

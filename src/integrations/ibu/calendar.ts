@@ -17,10 +17,19 @@ const DISCIPLINE_EMOJI: Record<DisciplineId, string> = {
   SR: '🔄',
 }
 
-function formatResults(results: IBUResult[]): string {
-  const top10 = results.slice(0, 10)
+function isRelayDiscipline(disciplineId: DisciplineId): boolean {
+  return disciplineId === 'RL' || disciplineId === 'SR'
+}
+
+function formatResults(
+  results: IBUResult[],
+  disciplineId: DisciplineId,
+): string {
+  const isRelay = isRelayDiscipline(disciplineId)
+  const filtered = results.filter((r) => r.IsTeam === isRelay)
+  const top10 = filtered.slice(0, 10)
   return top10
-    .map((r) => `${r.Rank}. ${r.Name} (${r.Nat}) - ${r.TotalTime}`)
+    .map((r) => `${r.Rank}. ${r.ShortName} (${r.Nat}) - ${r.TotalTime}`)
     .join('\n')
 }
 
@@ -56,7 +65,10 @@ function competitionToIcsEvent(
 
   let description = competition.Description
   if (results && results.length > 0) {
-    description += `\n\nTop 10 Results:\n${formatResults(results)}`
+    const formattedResults = formatResults(results, competition.DisciplineId)
+    if (formattedResults) {
+      description += `\n\nTop 10 Results:\n${formattedResults}`
+    }
   }
 
   const startTime = new Date(competition.StartTime)

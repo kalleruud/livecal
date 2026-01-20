@@ -101,6 +101,7 @@ describe('buildCalendar', () => {
         [
           {
             ResultOrder: 1,
+            IsTeam: false,
             Name: 'Test Athlete',
             ShortName: 'T. Athlete',
             Nat: 'FIN',
@@ -130,5 +131,128 @@ describe('buildCalendar', () => {
     })
 
     expect(calendar.events).toHaveLength(0)
+  })
+
+  test('results use ShortName instead of full Name', () => {
+    const completedCompetition = { ...mockCompetition, StatusId: 11 }
+    const competitions = new Map([[mockEvent.EventId, [completedCompetition]]])
+    const results = new Map([
+      [
+        completedCompetition.RaceId,
+        [
+          {
+            ResultOrder: 1,
+            IsTeam: false,
+            Name: 'DALE-SKJEVDAL Johannes',
+            ShortName: 'DALE-SKJEVDAL J.',
+            Nat: 'NOR',
+            Rank: '1',
+            Shootings: '0+0+1+0',
+            TotalTime: '30:23.9',
+            Behind: '0.0',
+          },
+        ],
+      ],
+    ])
+
+    const calendar = buildCalendar([mockEvent], competitions, results, {
+      includeEvents: false,
+      includeComps: true,
+    })
+
+    expect(calendar.events?.[0].description).toContain('DALE-SKJEVDAL J.')
+    expect(calendar.events?.[0].description).not.toContain(
+      'DALE-SKJEVDAL Johannes',
+    )
+  })
+
+  test('individual events only show non-team results', () => {
+    const sprintCompetition = { ...mockCompetition, StatusId: 11 }
+    const competitions = new Map([[mockEvent.EventId, [sprintCompetition]]])
+    const results = new Map([
+      [
+        sprintCompetition.RaceId,
+        [
+          {
+            ResultOrder: 1,
+            IsTeam: false,
+            Name: 'Individual Athlete',
+            ShortName: 'INDIVIDUAL A.',
+            Nat: 'NOR',
+            Rank: '1',
+            Shootings: '0+0',
+            TotalTime: '20:00.0',
+            Behind: '0.0',
+          },
+          {
+            ResultOrder: 2,
+            IsTeam: true,
+            Name: 'Team Result',
+            ShortName: 'TEAM',
+            Nat: 'NOR',
+            Rank: '1',
+            Shootings: '0+0',
+            TotalTime: '20:00.0',
+            Behind: '0.0',
+          },
+        ],
+      ],
+    ])
+
+    const calendar = buildCalendar([mockEvent], competitions, results, {
+      includeEvents: false,
+      includeComps: true,
+    })
+
+    expect(calendar.events?.[0].description).toContain('INDIVIDUAL A.')
+    expect(calendar.events?.[0].description).not.toContain('TEAM')
+  })
+
+  test('relay events only show team results', () => {
+    const relayCompetition = {
+      ...mockCompetition,
+      RaceId: 'BT2526SWRLCP01SWRL',
+      DisciplineId: 'RL' as const,
+      StatusId: 11,
+    }
+    const competitions = new Map([[mockEvent.EventId, [relayCompetition]]])
+    const results = new Map([
+      [
+        relayCompetition.RaceId,
+        [
+          {
+            ResultOrder: 1,
+            IsTeam: true,
+            Name: 'NORWAY',
+            ShortName: 'NORWAY',
+            Nat: 'NOR',
+            Rank: '1',
+            Shootings: '0+2',
+            TotalTime: '1:07:06.2',
+            Behind: '0.0',
+          },
+          {
+            ResultOrder: 2,
+            IsTeam: false,
+            Name: 'JOHANSEN Marthe Krakstad',
+            ShortName: 'JOHANSEN M.',
+            Nat: 'SWE',
+            Rank: '1',
+            Shootings: '0+0',
+            TotalTime: '17:06.9',
+            Behind: '0.0',
+          },
+        ],
+      ],
+    ])
+
+    const calendar = buildCalendar([mockEvent], competitions, results, {
+      includeEvents: false,
+      includeComps: true,
+    })
+
+    expect(calendar.events?.[0].description).toContain('NORWAY')
+    expect(calendar.events?.[0].description).not.toContain('(NOR)')
+    expect(calendar.events?.[0].description).not.toContain('JOHANSEN M.')
   })
 })

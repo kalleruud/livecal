@@ -68,27 +68,14 @@ livecal/
 │       ├── calendar.ts             # ts-ics wrapper utilities
 │       └── date.ts                 # Date formatting helpers
 │
-├── tests/
-│   ├── setup.ts                    # Test setup and global mocks
-│   ├── server/
-│   │   └── cache.test.ts           # Cache service tests
-│   └── integrations/
-│       └── ibu/
-│           ├── service.test.ts     # IBU service tests
-│           └── api.test.ts         # IBU API client tests
-│
-├── cache/                          # Cached responses (gitignored)
-├── .husky/
-│   └── pre-commit                  # Pre-commit hook script
-├── biome.json                      # Biome configuration
-├── tsconfig.json                   # TypeScript configuration
-├── Dockerfile                      # Production Docker image
-├── docker-compose.yml              # Docker Compose setup
-├── .env.example                    # Environment variable template
-├── .gitignore                      # Git ignore rules
-├── package.json                    # Dependencies and scripts
-├── bun.lock                        # Bun lockfile
-└── README.md                       # This file
+└── tests/
+    ├── setup.ts                    # Test setup and global mocks
+    ├── server/
+    │   └── cache.test.ts           # Cache service tests
+    └── integrations/
+        └── ibu/
+            ├── service.test.ts     # IBU service tests
+            └── api.test.ts         # IBU API client tests
 ```
 
 ## Integration Interface

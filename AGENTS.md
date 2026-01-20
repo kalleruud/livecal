@@ -16,6 +16,6 @@ Default to using Bun instead of Node.js.
 # Rules (Important)
 
 - Always read [`README.md`](README.md)
-- Always keep relevant `.md`-files updated.
+- Always keep relevant `.md`-files in the docs folder updated, and the `README.md`-file updated with a list of doc-files.
 - Regularly commit changes with a one-line description
 - Always provide tests to prove implementation works.

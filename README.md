@@ -16,6 +16,16 @@ This is a super minimal server that ports external APIs to simple webcal endpoin
 - Event titles prefixed with emojis representing event type
 - Completed events marked with ✅
 
+## Documentation
+
+Feature specifications and design documents live in the `docs/` folder.
+
+| Document | Description |
+| -------- | ----------- |
+| [Server & Routing](docs/server.md) | HTTP server and request routing |
+| [Caching](docs/cache.md) | Disk-based response caching |
+| [Scheduler](docs/scheduler.md) | CRON-based cache refresh |
+
 ## Integrations
 
 Each integration lives in its own folder under `src/integrations/` with its own README.
@@ -32,6 +42,8 @@ See [Adding a New Integration](#adding-a-new-integration) for how to create new 
 
 ```
 livecal/
+├── docs/                          # Feature documentation
+│   └── *.md                       # Detailed feature specifications
 ├── src/
 │   ├── index.ts                    # Application entry point (Bun.serve)
 │   │

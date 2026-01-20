@@ -1,4 +1,4 @@
-import type { VCalendar } from 'ts-ics'
+import type { IcsCalendar } from 'ts-ics'
 
 export interface IntegrationConfig {
   id: string
@@ -20,7 +20,7 @@ export interface Route {
 
 export interface IntegrationService {
   readonly config: IntegrationConfig
-  getCalendar(params: QueryParams): Promise<VCalendar>
+  getCalendar(params: QueryParams): Promise<IcsCalendar>
   getRoutes(): Route[]
   validateParams(params: QueryParams): string | null
   getCacheKey(params: QueryParams): string

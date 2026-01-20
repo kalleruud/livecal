@@ -4,10 +4,9 @@ This is a super minimal server that ports external APIs to simple webcal endpoin
 
 ## Tech Stack
 
-- **Runtime:** [Bun](https://bun.sh/) - Fast TypeScript runtime
-- **Framework:** [Hono](https://hono.dev/) - Lightweight web framework
+- **Runtime:** [Bun](https://bun.sh/) - Fast TypeScript runtime with built-in HTTP server
 - **Calendar:** [ts-ics](https://github.com/Neuvernetzung/ts-ics) - ICS/WebCal format generation
-- **Testing:** [Vitest](https://vitest.dev/) - Vite-native test framework
+- **Testing:** [Bun test](https://bun.sh/docs/cli/test) - Built-in test runner
 - **Linting/Formatting:** [Biome](https://biomejs.dev/) - Fast formatter and linter
 - **Git Hooks:** [Husky](https://typicode.github.io/husky/) - Git hooks made easy
 
@@ -34,11 +33,10 @@ See [Adding a New Integration](#adding-a-new-integration) for how to create new 
 ```
 livecal/
 ├── src/
-│   ├── index.ts                    # Application entry point
+│   ├── index.ts                    # Application entry point (Bun.serve)
 │   │
 │   ├── server/                     # Server setup and core functionality
-│   │   ├── app.ts                  # Hono app setup and middleware
-│   │   ├── routes.ts               # Route registration (auto-discovers integrations)
+│   │   ├── router.ts               # Route definitions and request handling
 │   │   ├── cache.ts                # Disk caching logic
 │   │   └── scheduler.ts            # CRON scheduler for cache updates
 │   │
@@ -72,7 +70,6 @@ livecal/
 │   └── pre-commit                  # Pre-commit hook script
 ├── biome.json                      # Biome configuration
 ├── tsconfig.json                   # TypeScript configuration
-├── vitest.config.ts                # Vitest configuration
 ├── Dockerfile                      # Production Docker image
 ├── docker-compose.yml              # Docker Compose setup
 ├── .env.example                    # Environment variable template
@@ -90,7 +87,6 @@ All integrations implement the same interface, making it easy to add new calenda
 
 ```typescript
 import type { VCalendar } from "ts-ics";
-import type { Context } from "hono";
 
 /**
  * Configuration for an integration
@@ -114,6 +110,19 @@ export interface QueryParams {
 }
 
 /**
+ * Route handler function type
+ */
+export type RouteHandler = (req: Request) => Response | Promise<Response>;
+
+/**
+ * Route definition for an integration
+ */
+export interface Route {
+  path: string;
+  handler: RouteHandler;
+}
+
+/**
  * All integration services must implement this interface
  */
 export interface IntegrationService {
@@ -128,10 +137,10 @@ export interface IntegrationService {
   getCalendar(params: QueryParams): Promise<VCalendar>;
 
   /**
-   * Define routes for this integration
-   * Called during app initialization
+   * Get routes for this integration
+   * @returns Array of route definitions
    */
-  registerRoutes(app: Hono): void;
+  getRoutes(): Route[];
 
   /**
    * Validate query parameters
@@ -164,12 +173,12 @@ src/integrations/
 2. Implement the service (`service.ts`):
 
 ```typescript
-import type { Hono } from "hono";
 import type { VCalendar } from "ts-ics";
 import type {
   IntegrationConfig,
   IntegrationService,
   QueryParams,
+  Route,
 } from "../interface";
 import { fetchData } from "./api";
 import { buildCalendar } from "./calendar";
@@ -188,18 +197,26 @@ export class MyServiceIntegration implements IntegrationService {
     return buildCalendar(data);
   }
 
-  registerRoutes(app: Hono): void {
-    app.get(`${this.config.basePath}/calendar.ics`, async (c) => {
-      const params = c.req.query();
-      const error = this.validateParams(params);
-      if (error) {
-        return c.text(error, 400);
-      }
-      const calendar = await this.getCalendar(params);
-      return c.text(calendar.toString(), 200, {
-        "Content-Type": "text/calendar; charset=utf-8",
-      });
-    });
+  getRoutes(): Route[] {
+    return [
+      {
+        path: `${this.config.basePath}/calendar.ics`,
+        handler: async (req: Request) => {
+          const url = new URL(req.url);
+          const params = Object.fromEntries(url.searchParams);
+
+          const error = this.validateParams(params);
+          if (error) {
+            return new Response(error, { status: 400 });
+          }
+
+          const calendar = await this.getCalendar(params);
+          return new Response(calendar.toString(), {
+            headers: { "Content-Type": "text/calendar; charset=utf-8" },
+          });
+        },
+      },
+    ];
   }
 
   validateParams(params: QueryParams): string | null {
@@ -216,7 +233,7 @@ export class MyServiceIntegration implements IntegrationService {
 3. Register the integration (`src/integrations/index.ts`):
 
 ```typescript
-import type { IntegrationService } from "./interface";
+import type { IntegrationService, Route } from "./interface";
 import { IBUIntegration } from "./ibu/service";
 import { MyServiceIntegration } from "./myservice/service";
 
@@ -225,10 +242,8 @@ export const integrations: IntegrationService[] = [
   new MyServiceIntegration(),
 ];
 
-export function registerAllIntegrations(app: Hono): void {
-  for (const integration of integrations) {
-    integration.registerRoutes(app);
-  }
+export function getAllRoutes(): Route[] {
+  return integrations.flatMap((integration) => integration.getRoutes());
 }
 ```
 
@@ -275,27 +290,37 @@ cp .env.example .env
 
 ### Scripts
 
-| Script          | Description                              |
-| --------------- | ---------------------------------------- |
-| `bun run dev`   | Start development server with hot reload |
-| `bun run start` | Start production server                  |
-| `bun run test`  | Run tests                                |
-| `bun run test:watch` | Run tests in watch mode             |
-| `bun run test:coverage` | Run tests with coverage report   |
-| `bun run lint`  | Run Biome linter                         |
-| `bun run format`| Format code with Biome                   |
-| `bun run check` | Run Biome check (lint + format)          |
-| `bun run prepare` | Setup Husky git hooks                  |
+| Script            | Description                              |
+| ----------------- | ---------------------------------------- |
+| `bun run dev`     | Start development server with hot reload |
+| `bun run start`   | Start production server                  |
+| `bun test`        | Run tests                                |
+| `bun test --watch`| Run tests in watch mode                  |
+| `bun run lint`    | Run Biome linter                         |
+| `bun run format`  | Format code with Biome                   |
+| `bun run check`   | Run Biome check (lint + format)          |
+| `bun run prepare` | Setup Husky git hooks                    |
 
 ## Testing
 
-Tests are written using Vitest and located in the `tests/` directory.
+Tests are written using [Bun's built-in test runner](https://bun.sh/docs/cli/test) and located in the `tests/` directory.
+
+```bash
+# Run all tests
+bun test
+
+# Run tests in watch mode
+bun test --watch
+
+# Run specific test file
+bun test tests/integrations/ibu/service.test.ts
+```
 
 ### Test Structure
 
 - **Unit tests:** Test individual functions and utilities
 - **Integration tests:** Test API endpoints and service interactions
-- **Mocking:** External API calls are mocked to ensure reliable tests
+- **Mocking:** External API calls are mocked using `mock` from `bun:test`
 
 ## Docker
 

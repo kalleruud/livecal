@@ -1,7 +1,5 @@
 # IBU Biathlon World Cup Integration
 
-> **Note:** This file will be moved to `src/integrations/ibu/README.md` when the source structure is created.
-
 ## Overview
 
 Fetches data from [IBU Biathlon World Cup](https://www.biathlonworld.com/calendar) API and exposes webcal endpoints.
@@ -276,12 +274,12 @@ curl -H "Content-Type: application/json; charset=utf-8" \
 
 ```typescript
 // src/integrations/ibu/service.ts
-import type { Hono } from "hono";
 import type { VCalendar } from "ts-ics";
 import type {
   IntegrationConfig,
   IntegrationService,
   QueryParams,
+  Route,
 } from "../interface";
 import { fetchEvents, fetchCompetitions, fetchResults } from "./api";
 import { buildCalendar } from "./calendar";
@@ -304,22 +302,31 @@ export class IBUIntegration implements IntegrationService {
     return buildCalendar(events, competitions, results, params);
   }
 
-  registerRoutes(app: Hono): void {
-    app.get(`${this.config.basePath}/wc.ics`, async (c) => {
-      const params = this.parseParams(c.req.query());
-      const error = this.validateParams(params);
-      if (error) return c.text(error, 400);
+  getRoutes(): Route[] {
+    return [
+      {
+        path: `${this.config.basePath}/wc.ics`,
+        handler: async (req: Request) => {
+          const url = new URL(req.url);
+          const params = this.parseParams(Object.fromEntries(url.searchParams));
 
-      const calendar = await this.getCalendar(params);
-      const contentType = c.req.header("Content-Type");
+          const error = this.validateParams(params);
+          if (error) {
+            return new Response(error, { status: 400 });
+          }
 
-      if (contentType?.includes("application/json")) {
-        return c.json(calendar);
-      }
-      return c.text(calendar.toString(), 200, {
-        "Content-Type": "text/calendar; charset=utf-8",
-      });
-    });
+          const calendar = await this.getCalendar(params);
+          const contentType = req.headers.get("Content-Type");
+
+          if (contentType?.includes("application/json")) {
+            return Response.json(calendar);
+          }
+          return new Response(calendar.toString(), {
+            headers: { "Content-Type": "text/calendar; charset=utf-8" },
+          });
+        },
+      },
+    ];
   }
 
   validateParams(params: QueryParams): string | null {

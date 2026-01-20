@@ -75,7 +75,7 @@ function competitionToIcsEvent(
   }
 
   const startTime = new Date(competition.StartTime)
-  const endTime = new Date(startTime.getTime() + 2 * 60 * 60 * 1000)
+  const endTime = new Date(startTime.getTime() + 1.5 * 60 * 60 * 1000)
 
   return {
     uid: competition.RaceId,

@@ -6,9 +6,7 @@
     "dev": "bun --hot src/index.ts",
     "start": "bun src/index.ts",
     "lint": "biome lint .",
-    "format": "biome format --write",
-    "check": "biome check --write",
-    "prepare": "husky"
+    "format": "biome format --write"
   },
   "dependencies": {
     "croner": "^9.1.0",

@@ -3,7 +3,8 @@
 
 - Always read [`README.md`](README.md)
 - Always keep relevant `.md`-files in the docs folder updated, and the `README.md`-file updated with a list of doc-files.
-- Regularly commit changes with a one-line description
+- Verify changes with `bun test && bun run lint`
+- Regularly commit changes with a one-line description using `bun run format && git stage . && git commit -m <message>`
 - Always provide tests to prove implementation works.
 
 # Use Bun

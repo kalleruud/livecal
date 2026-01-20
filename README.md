@@ -297,8 +297,6 @@ cp .env.example .env
 | `bun test --watch`| Run tests in watch mode                  |
 | `bun run lint`    | Run Biome linter                         |
 | `bun run format`  | Format code with Biome                   |
-| `bun run check`   | Run Biome check (lint + format)          |
-| `bun run prepare` | Setup Husky git hooks                    |
 
 ## Testing
 
@@ -310,9 +308,6 @@ bun test
 
 # Run tests in watch mode
 bun test --watch
-
-# Run specific test file
-bun test tests/integrations/ibu/service.test.ts
 ```
 
 ### Test Structure

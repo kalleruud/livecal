@@ -1,4 +1,5 @@
 import type { IcsCalendar } from 'ts-ics'
+import { generateIcsCalendar } from 'ts-ics'
 import type {
   IntegrationConfig,
   IntegrationService,
@@ -8,7 +9,6 @@ import type {
 import { fetchCompetitions, fetchEvents, fetchResults } from './api.ts'
 import { buildCalendar } from './calendar.ts'
 import type { IBUQueryParams } from './types.ts'
-import { generateIcsCalendar } from 'ts-ics'
 
 const config: IntegrationConfig = {
   id: 'ibu',
@@ -85,8 +85,10 @@ export class IBUIntegration implements IntegrationService {
     return {
       season: query.season as string | undefined,
       gender: query.gender as string | undefined,
-      includeEvents: query.includeEvents === 'true' || query.includeEvents === true,
-      includeComps: query.includeComps !== 'false' && query.includeComps !== false,
+      includeEvents:
+        query.includeEvents === 'true' || query.includeEvents === true,
+      includeComps:
+        query.includeComps !== 'false' && query.includeComps !== false,
     }
   }
 

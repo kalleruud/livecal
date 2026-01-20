@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'bun:test'
 import { buildCalendar } from '../../../src/integrations/ibu/calendar.ts'
-import type { IBUCompetition, IBUEvent } from '../../../src/integrations/ibu/types.ts'
+import type {
+  IBUCompetition,
+  IBUEvent,
+} from '../../../src/integrations/ibu/types.ts'
 
 const mockEvent: IBUEvent = {
   SeasonId: '2526',

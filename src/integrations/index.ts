@@ -1,5 +1,5 @@
-import type { IntegrationService, Route } from './interface.ts'
 import { IBUIntegration } from './ibu/service.ts'
+import type { IntegrationService, Route } from './interface.ts'
 
 export const integrations: IntegrationService[] = [new IBUIntegration()]
 

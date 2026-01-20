@@ -4,7 +4,10 @@
       "Bash(bun run lint)",
       "Bash(bun run format)",
       "Bash(bun test)",
-      "Bash(bun run format && git stage . && git commit -m:*)"
+      "Bash(bun run format && git stage . && git commit -m:*)",
+      "Bash(bun run format:*)",
+      "Bash(git stage:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

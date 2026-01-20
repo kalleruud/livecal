@@ -17,12 +17,6 @@ const DISCIPLINE_EMOJI: Record<DisciplineId, string> = {
   SR: '🔄',
 }
 
-const GENDER_EMOJI: Record<string, string> = {
-  SM: '♂️',
-  SW: '♀️',
-  MX: '👫',
-}
-
 function formatResults(results: IBUResult[]): string {
   const top10 = results.slice(0, 10)
   return top10
@@ -58,7 +52,7 @@ function competitionToIcsEvent(
   const isCompleted = competition.StatusId >= 10
   const emoji = isCompleted
     ? '✅'
-    : (DISCIPLINE_EMOJI[competition.DisciplineId] || '📅')
+    : DISCIPLINE_EMOJI[competition.DisciplineId] || '📅'
 
   let description = competition.Description
   if (results && results.length > 0) {

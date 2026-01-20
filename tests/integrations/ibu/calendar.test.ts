@@ -80,7 +80,7 @@ describe('buildCalendar', () => {
     expect(calendar.events?.[0].uid).toBe(mockCompetition.RaceId)
   })
 
-  test('adds discipline emoji to competition summary', () => {
+  test('adds discipline emoji to scheduled competition', () => {
     const competitions = new Map([[mockEvent.EventId, [mockCompetition]]])
 
     const calendar = buildCalendar([mockEvent], competitions, new Map(), {
@@ -89,20 +89,10 @@ describe('buildCalendar', () => {
     })
 
     expect(calendar.events?.[0].summary).toContain('🎿')
+    expect(calendar.events?.[0].summary).not.toContain('✅')
   })
 
-  test('adds gender emoji to competition summary', () => {
-    const competitions = new Map([[mockEvent.EventId, [mockCompetition]]])
-
-    const calendar = buildCalendar([mockEvent], competitions, new Map(), {
-      includeEvents: false,
-      includeComps: true,
-    })
-
-    expect(calendar.events?.[0].summary).toContain('♀️')
-  })
-
-  test('adds completed emoji when competition has results', () => {
+  test('adds completed emoji instead of discipline emoji when completed', () => {
     const completedCompetition = { ...mockCompetition, StatusId: 11 }
     const competitions = new Map([[mockEvent.EventId, [completedCompetition]]])
     const results = new Map([
@@ -129,6 +119,7 @@ describe('buildCalendar', () => {
     })
 
     expect(calendar.events?.[0].summary).toContain('✅')
+    expect(calendar.events?.[0].summary).not.toContain('🎿')
   })
 
   test('filters out non-World Cup events', () => {

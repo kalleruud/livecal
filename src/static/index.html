@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Livecal</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      line-height: 1.6;
+    }
+    h1 { margin-bottom: 0.5rem; }
+    p { color: #666; margin-top: 0; }
+    ul { list-style: none; padding: 0; }
+    li {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+    }
+    code {
+      background: #f5f5f5;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      flex: 1;
+    }
+    a {
+      color: #0066cc;
+      text-decoration: none;
+      padding: 0.25rem 0.5rem;
+      border: 1px solid currentColor;
+      border-radius: 4px;
+    }
+    a:hover { background: #0066cc; color: white; }
+  </style>
+</head>
+<body>
+  <h1>Livecal</h1>
+  <p>Available calendar endpoints</p>
+  <ul>
+    {{ENDPOINTS}}
+  </ul>
+</body>
+</html>

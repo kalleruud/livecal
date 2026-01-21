@@ -1,19 +1,22 @@
 services:
   livecal:
-    build: .
+    image: ghcr.io/kalleruud/livecal:latest
     container_name: livecal
     restart: unless-stopped
     ports:
-      - "6699:6699"
-    environment:
-      - PORT=6699
-      - HOST=0.0.0.0
-      - CACHE_DIR=/app/cache
-      - CACHE_CRON=0 * * * *
+      - "6699:${PORT:-6699}"
+    env_file:
+      - .env
     volumes:
-      - livecal-cache:/app/cache
+      - livecal-cache:${CACHE_DIR}
     healthcheck:
-      test: ["CMD", "bun", "-e", "fetch('http://localhost:6699/health').then(r => process.exit(r.ok ? 0 : 1))"]
+      test:
+        [
+          "CMD",
+          "sh",
+          "-c",
+          'bun -e "fetch(''http://localhost:'' + (process.env.PORT || 6699) + ''/health'').then(r => process.exit(r.ok ? 0 : 1))"',
+        ]
       interval: 10s
       timeout: 5s
       retries: 3

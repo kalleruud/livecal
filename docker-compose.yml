@@ -1,0 +1,23 @@
+services:
+  livecal:
+    build: .
+    container_name: livecal
+    restart: unless-stopped
+    ports:
+      - "6699:6699"
+    environment:
+      - PORT=6699
+      - HOST=0.0.0.0
+      - CACHE_DIR=/app/cache
+      - CACHE_CRON=0 * * * *
+    volumes:
+      - livecal-cache:/app/cache
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6699/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  livecal-cache:

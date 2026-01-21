@@ -7,15 +7,11 @@ COPY . .
 FROM oven/bun:1-slim
 WORKDIR /app
 
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 bunjs
-USER bunjs
-
-COPY --from=builder --chown=bunjs:nodejs /app/src ./src
-COPY --from=builder --chown=bunjs:nodejs /app/package.json ./
-COPY --from=builder --chown=bunjs:nodejs /app/node_modules ./node_modules
-
 RUN mkdir -p /app/cache
+
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
 
 ENV NODE_ENV=production
 ENV PORT=6699

@@ -13,11 +13,11 @@ services:
     volumes:
       - livecal-cache:/app/cache
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6699/health"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:6699/health').then(r => process.exit(r.ok ? 0 : 1))"]
+      interval: 10s
+      timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 5s
 
 volumes:
   livecal-cache:

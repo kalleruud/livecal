@@ -18,19 +18,23 @@
     p { color: #888; margin-top: 0; }
     ul { list-style: none; padding: 0; }
     li {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
       padding: 0.75rem;
       border: 1px solid #333;
       border-radius: 4px;
       margin-bottom: 0.5rem;
+    }
+    .endpoint-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
     }
     code {
       background: #1e1e1e;
       padding: 0.25rem 0.5rem;
       border-radius: 4px;
       flex: 1;
+      font-size: 0.9rem;
     }
     a {
       color: #66b3ff;
@@ -40,6 +44,31 @@
       border-radius: 4px;
     }
     a:hover { background: #66b3ff; color: #121212; }
+    .params {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+      font-size: 0.85rem;
+    }
+    .param {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .param label {
+      color: #888;
+    }
+    select, input[type="text"] {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #e0e0e0;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.85rem;
+    }
+    input[type="checkbox"] {
+      accent-color: #66b3ff;
+    }
   </style>
 </head>
 <body>
@@ -48,5 +77,36 @@
   <ul>
     {{ENDPOINTS}}
   </ul>
+  <script>
+    document.querySelectorAll('.endpoint').forEach(endpoint => {
+      const basePath = endpoint.dataset.path;
+      const link = endpoint.querySelector('.subscribe-link');
+      const code = endpoint.querySelector('code');
+      const inputs = endpoint.querySelectorAll('select, input');
+
+      function updateUrl() {
+        const params = new URLSearchParams();
+        inputs.forEach(input => {
+          if (input.type === 'checkbox') {
+            if (input.dataset.default === 'true' && !input.checked) {
+              params.set(input.name, 'false');
+            } else if (input.dataset.default === 'false' && input.checked) {
+              params.set(input.name, 'true');
+            }
+          } else if (input.value) {
+            params.set(input.name, input.value);
+          }
+        });
+        const query = params.toString();
+        const fullPath = query ? `${basePath}?${query}` : basePath;
+        const webcalUrl = `webcal://${location.host}${fullPath}`;
+        link.href = webcalUrl;
+        code.textContent = fullPath;
+      }
+
+      inputs.forEach(input => { input.addEventListener('change', updateUrl); });
+      updateUrl();
+    });
+  </script>
 </body>
 </html>

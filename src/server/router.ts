@@ -28,9 +28,37 @@ function renderEndpoints(host: string): string {
   return calendarRoutes
     .map((path) => {
       const webcalUrl = `webcal://${host}${path}`
-      return `<li>
-      <code>${path}</code>
-      <a href="${webcalUrl}">Subscribe</a>
+      return `<li class="endpoint" data-path="${path}">
+      <div class="endpoint-header">
+        <code>${path}</code>
+        <a href="${webcalUrl}" class="subscribe-link">Subscribe</a>
+      </div>
+      <div class="params">
+        <div class="param">
+          <label>Season</label>
+          <input type="text" name="season" placeholder="e.g. 2526">
+        </div>
+        <div class="param">
+          <label>Gender</label>
+          <select name="gender">
+            <option value="">All</option>
+            <option value="M">Men</option>
+            <option value="W">Women</option>
+          </select>
+        </div>
+        <div class="param">
+          <label>
+            <input type="checkbox" name="includeEvents" data-default="false">
+            Include Events
+          </label>
+        </div>
+        <div class="param">
+          <label>
+            <input type="checkbox" name="includeComps" data-default="true" checked>
+            Include Competitions
+          </label>
+        </div>
+      </div>
     </li>`
     })
     .join('\n    ')

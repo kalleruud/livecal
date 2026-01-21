@@ -41,4 +41,16 @@ describe('cache', () => {
   test('remove handles non-existent key', async () => {
     await cache.remove('does-not-exist.ics')
   })
+
+  test('clear removes all cached files', async () => {
+    await cache.set('file1.ics', 'content1')
+    await cache.set('file2.ics', 'content2')
+    await cache.set('file3.ics', 'content3')
+
+    await cache.clear()
+
+    expect(await cache.get('file1.ics')).toBeNull()
+    expect(await cache.get('file2.ics')).toBeNull()
+    expect(await cache.get('file3.ics')).toBeNull()
+  })
 })

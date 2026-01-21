@@ -1,5 +1,6 @@
 import type { IcsCalendar } from 'ts-ics'
 import { generateIcsCalendar } from 'ts-ics'
+import * as cache from '../../server/cache.ts'
 import type {
   IntegrationConfig,
   IntegrationService,
@@ -45,14 +46,24 @@ export class IBUIntegration implements IntegrationService {
             return new Response(error, { status: 400 })
           }
 
-          const calendar = await this.getCalendar(params)
-          const contentType = req.headers.get('Content-Type')
+          const cacheKey = this.getCacheKey(params)
+          let icsContent = await cache.get(cacheKey)
 
-          if (contentType?.includes('application/json')) {
-            return Response.json(calendar)
+          if (!icsContent) {
+            console.log(`Cache miss for ${cacheKey}, fetching from API...`)
+            const calendar = await this.getCalendar(params)
+            icsContent = generateIcsCalendar(calendar)
+            await cache.set(cacheKey, icsContent)
+          } else {
+            console.log(`Cache hit for ${cacheKey}`)
           }
 
-          return new Response(generateIcsCalendar(calendar), {
+          const contentType = req.headers.get('Content-Type')
+          if (contentType?.includes('application/json')) {
+            return Response.json({ cached: true, content: icsContent })
+          }
+
+          return new Response(icsContent, {
             headers: { 'Content-Type': 'text/calendar; charset=utf-8' },
           })
         },

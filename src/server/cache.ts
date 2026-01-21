@@ -1,4 +1,4 @@
-import { mkdir, unlink } from 'node:fs/promises'
+import { mkdir, readdir, unlink } from 'node:fs/promises'
 import { join } from 'node:path'
 
 const cacheDir = process.env.CACHE_DIR || './cache'
@@ -24,7 +24,13 @@ export async function remove(key: string): Promise<void> {
   const path = join(cacheDir, key)
   const file = Bun.file(path)
   if (await file.exists()) {
-    await Bun.write(path, '')
     await unlink(path)
   }
+}
+
+export async function clear(): Promise<void> {
+  await ensureCacheDir()
+  const files = await readdir(cacheDir)
+  await Promise.all(files.map((file) => unlink(join(cacheDir, file))))
+  console.log(`Cache cleared: ${files.length} files removed`)
 }

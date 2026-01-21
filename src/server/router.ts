@@ -36,8 +36,8 @@ async function renderEndpoints(host: string): Promise<string> {
     .map((path) => {
       const webcalUrl = `webcal://${host}${path}`
       return endpointTemplate
-        .replace(/{{PATH}}/g, path)
-        .replace(/{{WEBCAL_URL}}/g, webcalUrl)
+        .replaceAll('{{PATH}}', path)
+        .replaceAll('{{WEBCAL_URL}}', webcalUrl)
     })
     .join('\n    ')
 }

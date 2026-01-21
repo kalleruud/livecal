@@ -18,56 +18,34 @@ function getCalendarRoutes(): string[] {
   return routes.filter((r) => r.path.endsWith('.ics')).map((r) => r.path)
 }
 
-function renderEndpoints(host: string): string {
+async function loadTemplate(name: string): Promise<string> {
+  const path = new URL(`../static/${name}`, import.meta.url).pathname
+  return Bun.file(path).text()
+}
+
+async function renderEndpoints(host: string): Promise<string> {
   const calendarRoutes = getCalendarRoutes()
 
   if (calendarRoutes.length === 0) {
     return '<li>No calendars available</li>'
   }
 
+  const endpointTemplate = await loadTemplate('endpoint.html')
+
   return calendarRoutes
     .map((path) => {
       const webcalUrl = `webcal://${host}${path}`
-      return `<li class="endpoint" data-path="${path}">
-      <div class="endpoint-header">
-        <code>${path}</code>
-        <a href="${webcalUrl}" class="subscribe-link">Subscribe</a>
-      </div>
-      <div class="params">
-        <div class="param">
-          <label>Season</label>
-          <input type="text" name="season" placeholder="e.g. 2526">
-        </div>
-        <div class="param">
-          <label>Gender</label>
-          <select name="gender">
-            <option value="">All</option>
-            <option value="M">Men</option>
-            <option value="W">Women</option>
-          </select>
-        </div>
-        <div class="param">
-          <label>
-            <input type="checkbox" name="includeEvents" data-default="false">
-            Include Events
-          </label>
-        </div>
-        <div class="param">
-          <label>
-            <input type="checkbox" name="includeComps" data-default="true" checked>
-            Include Competitions
-          </label>
-        </div>
-      </div>
-    </li>`
+      return endpointTemplate
+        .replace(/{{PATH}}/g, path)
+        .replace(/{{WEBCAL_URL}}/g, webcalUrl)
     })
     .join('\n    ')
 }
 
 async function renderHomePage(host: string): Promise<string> {
-  const templatePath = new URL('../static/index.html', import.meta.url).pathname
-  const template = await Bun.file(templatePath).text()
-  return template.replace('{{ENDPOINTS}}', renderEndpoints(host))
+  const template = await loadTemplate('index.html')
+  const endpoints = await renderEndpoints(host)
+  return template.replace('{{ENDPOINTS}}', endpoints)
 }
 
 export async function handleRequest(req: Request): Promise<Response> {

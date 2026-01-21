@@ -20,7 +20,6 @@ function getCalendarRoutes(): string[] {
 
 function renderEndpoints(host: string): string {
   const calendarRoutes = getCalendarRoutes()
-  const protocol = host.includes('localhost') ? 'http' : 'https'
 
   if (calendarRoutes.length === 0) {
     return '<li>No calendars available</li>'
@@ -29,11 +28,9 @@ function renderEndpoints(host: string): string {
   return calendarRoutes
     .map((path) => {
       const webcalUrl = `webcal://${host}${path}`
-      const httpUrl = `${protocol}://${host}${path}`
       return `<li>
       <code>${path}</code>
       <a href="${webcalUrl}">Subscribe</a>
-      <a href="${httpUrl}" target="_blank">Preview</a>
     </li>`
     })
     .join('\n    ')

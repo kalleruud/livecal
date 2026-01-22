@@ -75,6 +75,55 @@ function getLast5FinishersAverage(
 }
 
 /**
+ * Parse the km field to get total distance in km.
+ * Handles formats like "7.5", "10", "4x6", "4x7.5", "2x6+2x7.5"
+ */
+function parseDistance(km: string): number {
+  // Handle relay formats like "4x6", "4x7.5", "2x6+2x7.5"
+  if (km.includes('x')) {
+    let total = 0
+    const parts = km.split('+')
+    for (const part of parts) {
+      const match = part.match(/(\d+)x([\d.]+)/)
+      if (match) {
+        total += Number.parseInt(match[1], 10) * Number.parseFloat(match[2])
+      }
+    }
+    return total
+  }
+
+  // Simple distance like "7.5" or "10"
+  return Number.parseFloat(km) || 0
+}
+
+/**
+ * Calculate average duration from a list of competitions
+ */
+function calculateAverageDuration(
+  competitions: IBUCompetition[],
+  allResults: Map<string, IBUResult[]>,
+  isRelay: boolean,
+): number | null {
+  const durations: number[] = []
+
+  for (const comp of competitions) {
+    const results = allResults.get(comp.RaceId)
+    if (results) {
+      const avg = getLast5FinishersAverage(results, isRelay)
+      if (avg && avg > 0) {
+        durations.push(avg)
+      }
+    }
+  }
+
+  if (durations.length === 0) {
+    return null
+  }
+
+  return durations.reduce((a, b) => a + b, 0) / durations.length
+}
+
+/**
  * Calculate historical duration from all available results for the same discipline + category
  */
 function getHistoricalDuration(
@@ -97,25 +146,43 @@ function getHistoricalDuration(
     return null
   }
 
-  // Calculate the average of last 5 finishers for each matching competition
-  const durations: number[] = []
+  return calculateAverageDuration(matchingCompetitions, allResults, isRelay)
+}
 
-  for (const comp of matchingCompetitions) {
-    const results = allResults.get(comp.RaceId)
-    if (results) {
-      const avg = getLast5FinishersAverage(results, isRelay)
-      if (avg && avg > 0) {
-        durations.push(avg)
-      }
-    }
-  }
+/**
+ * Find competitions with same discipline type and similar distance
+ */
+function getSimilarEventDuration(
+  disciplineId: DisciplineId,
+  km: string,
+  allCompetitions: IBUCompetition[],
+  allResults: Map<string, IBUResult[]>,
+): number | null {
+  const isRelay = disciplineId === 'RL' || disciplineId === 'SR'
+  const targetDistance = parseDistance(km)
 
-  if (durations.length === 0) {
+  if (targetDistance === 0) {
     return null
   }
 
-  // Return the average of all the averages
-  return durations.reduce((a, b) => a + b, 0) / durations.length
+  // Find competitions with same discipline (any category) and similar distance
+  const similarCompetitions = allCompetitions.filter((c) => {
+    if (c.DisciplineId !== disciplineId || !allResults.has(c.RaceId)) {
+      return false
+    }
+    const compDistance = parseDistance(c.km)
+    // Consider similar if within 20% of target distance
+    return (
+      compDistance > 0 &&
+      Math.abs(compDistance - targetDistance) / targetDistance <= 0.2
+    )
+  })
+
+  if (similarCompetitions.length === 0) {
+    return null
+  }
+
+  return calculateAverageDuration(similarCompetitions, allResults, isRelay)
 }
 
 /**
@@ -124,7 +191,8 @@ function getHistoricalDuration(
  * Priority:
  * 1. If results are available for this competition, use average time of last 5 finishers
  * 2. Use historical data from other competitions with same discipline + category
- * 3. Fall back to 90 minutes
+ * 3. Use data from similar events (same discipline type, similar distance)
+ * 4. Fall back to 90 minutes
  */
 export function estimateDuration(
   competition: IBUCompetition,
@@ -143,7 +211,7 @@ export function estimateDuration(
     }
   }
 
-  // Priority 2: Use historical data from other competitions
+  // Priority 2: Use historical data from other competitions with same discipline + category
   if (allCompetitions && allResults) {
     const historicalDuration = getHistoricalDuration(
       competition.DisciplineId,
@@ -155,8 +223,20 @@ export function estimateDuration(
     if (historicalDuration) {
       return historicalDuration
     }
+
+    // Priority 3: Use similar events (same discipline, similar distance)
+    const similarDuration = getSimilarEventDuration(
+      competition.DisciplineId,
+      competition.km,
+      allCompetitions,
+      allResults,
+    )
+
+    if (similarDuration) {
+      return similarDuration
+    }
   }
 
-  // Priority 3: Fallback
+  // Priority 4: Fallback
   return FALLBACK_DURATION_MS
 }

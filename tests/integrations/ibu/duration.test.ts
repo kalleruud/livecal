@@ -351,4 +351,97 @@ describe('estimateDuration', () => {
     // Should use current results (25 min), not historical (30 min)
     expect(duration).toBe(25 * 60 * 1000)
   })
+
+  test('falls back to similar event with same discipline and distance', () => {
+    // Women's Sprint at 7.5km - no results for this category
+    const womensSprint: IBUCompetition = {
+      ...baseCompetition,
+      RaceId: 'BT2526SWRLCP01SWSP',
+      catId: 'SW',
+      km: '7.5',
+    }
+
+    // Men's Sprint at 10km - has results but different distance
+    const mensSprint10km: IBUCompetition = {
+      ...baseCompetition,
+      RaceId: 'BT2526SWRLCP01SMSP',
+      catId: 'SM',
+      km: '10',
+    }
+
+    // Men's Sprint at 7.5km - has results, same distance (within 20%)
+    const mensSprint7km: IBUCompetition = {
+      ...baseCompetition,
+      RaceId: 'BT2425SWRLCP01SMSP',
+      catId: 'SM',
+      km: '7.5',
+    }
+
+    const mensResults: IBUResult[] = [
+      makeResult(1, '22:00.0'),
+      makeResult(2, '22:00.0'),
+      makeResult(3, '22:00.0'),
+    ]
+
+    const allCompetitions = [womensSprint, mensSprint10km, mensSprint7km]
+    const allResults = new Map([[mensSprint7km.RaceId, mensResults]])
+
+    const duration = estimateDuration(
+      womensSprint,
+      undefined,
+      allCompetitions,
+      allResults,
+    )
+
+    // Should use men's 7.5km sprint (similar distance): 22 min
+    expect(duration).toBe(22 * 60 * 1000)
+  })
+
+  test('handles relay distance parsing for similar events', () => {
+    // Women's Relay 4x6km = 24km total - no results
+    const womensRelay: IBUCompetition = {
+      ...baseCompetition,
+      RaceId: 'BT2526SWRLCP01SWRL',
+      DisciplineId: 'RL',
+      catId: 'SW',
+      km: '4x6',
+    }
+
+    // Men's Relay 4x7.5km = 30km total - has results, but distance difference > 20%
+    const mensRelay30: IBUCompetition = {
+      ...baseCompetition,
+      RaceId: 'BT2526SWRLCP01SMRL',
+      DisciplineId: 'RL',
+      catId: 'SM',
+      km: '4x7.5',
+    }
+
+    // Mixed Relay 4x6km = 24km total - has results, same distance
+    const mixedRelay24: IBUCompetition = {
+      ...baseCompetition,
+      RaceId: 'BT2526SWRLCP01MXRL',
+      DisciplineId: 'RL',
+      catId: 'MX',
+      km: '4x6',
+    }
+
+    const mixedResults: IBUResult[] = [
+      makeTeamResult(1, '1:12:00.0'),
+      makeTeamResult(2, '1:13:00.0'),
+      makeTeamResult(3, '1:14:00.0'),
+    ]
+
+    const allCompetitions = [womensRelay, mensRelay30, mixedRelay24]
+    const allResults = new Map([[mixedRelay24.RaceId, mixedResults]])
+
+    const duration = estimateDuration(
+      womensRelay,
+      undefined,
+      allCompetitions,
+      allResults,
+    )
+
+    // Should use mixed relay (same 24km distance): avg of 72, 73, 74 = 73 min
+    expect(duration).toBe(73 * 60 * 1000)
+  })
 })

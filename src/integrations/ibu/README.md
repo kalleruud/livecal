@@ -6,6 +6,8 @@ Fetches data from [IBU Biathlon World Cup](https://www.biathlonworld.com/calenda
 
 **Endpoint:** `webcal://<origin>/api/ibu/wc.ics`
 
+> The public GrapQL endpoint uses bearer token `9bYWlnEcduhVyQMnePDHl-6rvPmqxLu-mnCFdq9AgIw`.
+
 ## Features
 
 - Fetches all competitions for each Event

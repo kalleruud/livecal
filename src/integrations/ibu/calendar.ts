@@ -49,8 +49,8 @@ function eventToIcsEvent(event: IBUEvent): IcsEvent {
   return {
     uid: event.EventId,
     stamp: { date: new Date() },
-    start: { date: new Date(event.StartDate) },
-    end: { date: new Date(event.EndDate) },
+    start: { date: new Date(event.StartDate), type: 'DATE' },
+    end: { date: new Date(event.EndDate), type: 'DATE' },
     summary: `🏆 ${event.Description} - ${event.ShortDescription}`,
     location: `${event.Organizer}, ${event.NatLong}`,
     url: buildEventUrl(event),

@@ -1,4 +1,5 @@
 import type { IcsCalendar, IcsEvent } from 'ts-ics'
+import { estimateDuration } from './duration.ts'
 import type {
   DisciplineId,
   IBUCompetition,
@@ -75,7 +76,8 @@ function competitionToIcsEvent(
   }
 
   const startTime = new Date(competition.StartTime)
-  const endTime = new Date(startTime.getTime() + 1.5 * 60 * 60 * 1000)
+  const duration = estimateDuration(competition, results)
+  const endTime = new Date(startTime.getTime() + duration)
 
   return {
     uid: competition.RaceId,

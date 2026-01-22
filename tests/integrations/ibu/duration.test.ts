@@ -24,6 +24,7 @@ describe('parseTotalTime', () => {
   test('returns 0 for invalid format', () => {
     expect(parseTotalTime('')).toBe(0)
     expect(parseTotalTime('invalid')).toBe(0)
+    expect(parseTotalTime('Lapped')).toBe(0)
   })
 })
 
@@ -42,212 +43,312 @@ describe('estimateDuration', () => {
     LocalUTCOffset: 2,
   }
 
-  test('uses 1st place time when results are available', () => {
+  function makeResult(order: number, time: string): IBUResult {
+    return {
+      ResultOrder: order,
+      IsTeam: false,
+      Name: `Athlete ${order}`,
+      ShortName: `A. ${order}`,
+      Nat: 'FIN',
+      Rank: String(order),
+      Shootings: '0+0',
+      TotalTime: time,
+      Behind: '0.0',
+    }
+  }
+
+  function makeTeamResult(order: number, time: string): IBUResult {
+    return {
+      ResultOrder: order,
+      IsTeam: true,
+      Name: `Team ${order}`,
+      ShortName: `TEAM${order}`,
+      Nat: 'FIN',
+      Rank: String(order),
+      Shootings: '0+0',
+      TotalTime: time,
+      Behind: '0.0',
+    }
+  }
+
+  test('uses average of last 5 finishers when results are available', () => {
+    // 10 results, last 5 have times: 28:00, 29:00, 30:00, 31:00, 32:00
+    // Average = (28+29+30+31+32)/5 = 30 minutes
     const results: IBUResult[] = [
-      {
-        ResultOrder: 1,
-        IsTeam: false,
-        Name: 'Test Athlete',
-        ShortName: 'T. Athlete',
-        Nat: 'FIN',
-        Rank: '1',
-        Shootings: '0+0',
-        TotalTime: '20:00.0',
-        Behind: '0.0',
-      },
-      {
-        ResultOrder: 2,
-        IsTeam: false,
-        Name: 'Second Athlete',
-        ShortName: 'S. Athlete',
-        Nat: 'NOR',
-        Rank: '2',
-        Shootings: '0+1',
-        TotalTime: '20:30.0',
-        Behind: '30.0',
-      },
+      makeResult(1, '20:00.0'),
+      makeResult(2, '21:00.0'),
+      makeResult(3, '22:00.0'),
+      makeResult(4, '23:00.0'),
+      makeResult(5, '24:00.0'),
+      makeResult(6, '28:00.0'),
+      makeResult(7, '29:00.0'),
+      makeResult(8, '30:00.0'),
+      makeResult(9, '31:00.0'),
+      makeResult(10, '32:00.0'),
     ]
 
     const duration = estimateDuration(baseCompetition, results)
-    expect(duration).toBe(20 * 60 * 1000) // 20 minutes
+    expect(duration).toBe(30 * 60 * 1000) // 30 minutes average
   })
 
-  test('uses historical data when no results available', () => {
+  test('uses all results if fewer than 5 finishers', () => {
+    // Only 3 results: 20:00, 21:00, 22:00
+    // Average = (20+21+22)/3 = 21 minutes
+    const results: IBUResult[] = [
+      makeResult(1, '20:00.0'),
+      makeResult(2, '21:00.0'),
+      makeResult(3, '22:00.0'),
+    ]
+
+    const duration = estimateDuration(baseCompetition, results)
+    expect(duration).toBe(21 * 60 * 1000)
+  })
+
+  test('falls back to 90 minutes when no results and no historical data', () => {
     const duration = estimateDuration(baseCompetition)
-    // Kontiolahti Women Sprint historical: 23 minutes
-    expect(duration).toBe(23 * 60 * 1000)
+    expect(duration).toBe(90 * 60 * 1000)
   })
 
-  test('uses historical data for known location', () => {
-    const competition: IBUCompetition = {
+  test('uses historical data from other competitions when no results', () => {
+    // Create a historical competition with results
+    const historicalCompetition: IBUCompetition = {
       ...baseCompetition,
-      Location: 'Hochfilzen',
+      RaceId: 'BT2425SWRLCP01SWSP',
     }
 
-    const duration = estimateDuration(competition)
-    // Hochfilzen Women Sprint historical: 22:30
-    expect(duration).toBe(22 * 60 * 1000 + 30 * 1000)
-  })
-
-  test('uses default for unknown location', () => {
-    const competition: IBUCompetition = {
-      ...baseCompetition,
-      Location: 'New Location',
-    }
-
-    const duration = estimateDuration(competition)
-    // Default Women Sprint historical: 23 minutes
-    expect(duration).toBe(23 * 60 * 1000)
-  })
-
-  test('handles relay events correctly', () => {
-    const relayCompetition: IBUCompetition = {
-      ...baseCompetition,
-      RaceId: 'BT2526SWRLCP01SWRL',
-      DisciplineId: 'RL',
-      km: '4x6',
-      Description: 'Women 4x6km Relay',
-    }
-
-    const teamResults: IBUResult[] = [
-      {
-        ResultOrder: 1,
-        IsTeam: true,
-        Name: 'NORWAY',
-        ShortName: 'NORWAY',
-        Nat: 'NOR',
-        Rank: '1',
-        Shootings: '0+2',
-        TotalTime: '1:10:00.0',
-        Behind: '0.0',
-      },
-      {
-        ResultOrder: 2,
-        IsTeam: false,
-        Name: 'Individual Leg',
-        ShortName: 'I. Leg',
-        Nat: 'NOR',
-        Rank: '1',
-        Shootings: '0+0',
-        TotalTime: '17:00.0',
-        Behind: '0.0',
-      },
+    const historicalResults: IBUResult[] = [
+      makeResult(1, '20:00.0'),
+      makeResult(2, '21:00.0'),
+      makeResult(3, '22:00.0'),
+      makeResult(4, '23:00.0'),
+      makeResult(5, '24:00.0'),
     ]
 
-    const duration = estimateDuration(relayCompetition, teamResults)
-    // Should use team result (1:10:00), not individual leg time
-    expect(duration).toBe((1 * 3600 + 10 * 60) * 1000)
+    const allCompetitions = [baseCompetition, historicalCompetition]
+    const allResults = new Map([
+      [historicalCompetition.RaceId, historicalResults],
+    ])
+
+    // Current competition has no results, should use historical average
+    const duration = estimateDuration(
+      baseCompetition,
+      undefined,
+      allCompetitions,
+      allResults,
+    )
+
+    // Average of last 5 from historical: (20+21+22+23+24)/5 = 22 minutes
+    expect(duration).toBe(22 * 60 * 1000)
   })
 
-  test('falls back to historical data when no team results for relay', () => {
-    const relayCompetition: IBUCompetition = {
+  test('averages historical data from multiple competitions', () => {
+    // Two historical competitions with different averages
+    const historical1: IBUCompetition = {
       ...baseCompetition,
-      RaceId: 'BT2526SWRLCP01SWRL',
-      DisciplineId: 'RL',
-      km: '4x6',
-      Description: 'Women 4x6km Relay',
+      RaceId: 'BT2425SWRLCP01SWSP',
+    }
+    const historical2: IBUCompetition = {
+      ...baseCompetition,
+      RaceId: 'BT2425SWRLCP02SWSP',
     }
 
-    // Only individual leg results, no team result
-    const individualResults: IBUResult[] = [
-      {
-        ResultOrder: 1,
-        IsTeam: false,
-        Name: 'Individual Leg',
-        ShortName: 'I. Leg',
-        Nat: 'NOR',
-        Rank: '1',
-        Shootings: '0+0',
-        TotalTime: '17:00.0',
-        Behind: '0.0',
-      },
+    // First competition: avg of 22 min
+    const results1: IBUResult[] = [
+      makeResult(1, '20:00.0'),
+      makeResult(2, '21:00.0'),
+      makeResult(3, '22:00.0'),
+      makeResult(4, '23:00.0'),
+      makeResult(5, '24:00.0'),
     ]
 
-    const duration = estimateDuration(relayCompetition, individualResults)
-    // Should fall back to historical data (Kontiolahti Women Relay: 75 min)
-    expect(duration).toBe(75 * 60 * 1000)
+    // Second competition: avg of 32 min
+    const results2: IBUResult[] = [
+      makeResult(1, '30:00.0'),
+      makeResult(2, '31:00.0'),
+      makeResult(3, '32:00.0'),
+      makeResult(4, '33:00.0'),
+      makeResult(5, '34:00.0'),
+    ]
+
+    const allCompetitions = [baseCompetition, historical1, historical2]
+    const allResults = new Map([
+      [historical1.RaceId, results1],
+      [historical2.RaceId, results2],
+    ])
+
+    const duration = estimateDuration(
+      baseCompetition,
+      undefined,
+      allCompetitions,
+      allResults,
+    )
+
+    // Average of both: (22 + 32) / 2 = 27 minutes
+    expect(duration).toBe(27 * 60 * 1000)
   })
 
-  test('handles men sprint', () => {
-    const menSprint: IBUCompetition = {
+  test('only uses matching discipline and category for historical data', () => {
+    // Different discipline - should not be used
+    const differentDiscipline: IBUCompetition = {
       ...baseCompetition,
-      RaceId: 'BT2526SWRLCP01SMSP',
-      catId: 'SM',
-      km: '10',
-      Description: 'Men 10km Sprint',
-    }
-
-    const duration = estimateDuration(menSprint)
-    // Kontiolahti Men Sprint historical: 25:30
-    expect(duration).toBe(25 * 60 * 1000 + 30 * 1000)
-  })
-
-  test('handles pursuit', () => {
-    const pursuit: IBUCompetition = {
-      ...baseCompetition,
-      RaceId: 'BT2526SWRLCP01SWPU',
+      RaceId: 'BT2425SWRLCP01SWPU',
       DisciplineId: 'PU',
-      km: '10',
-      Description: 'Women 10km Pursuit',
     }
 
-    const duration = estimateDuration(pursuit)
-    // Kontiolahti Women Pursuit historical: 33 minutes
-    expect(duration).toBe(33 * 60 * 1000)
-  })
-
-  test('handles individual', () => {
-    const individual: IBUCompetition = {
+    // Different category - should not be used
+    const differentCategory: IBUCompetition = {
       ...baseCompetition,
-      RaceId: 'BT2526SWRLCP01SWIN',
-      DisciplineId: 'IN',
-      km: '15',
-      Description: 'Women 15km Individual',
-    }
-
-    const duration = estimateDuration(individual)
-    // Kontiolahti Women Individual historical: 47 minutes
-    expect(duration).toBe(47 * 60 * 1000)
-  })
-
-  test('handles mass start', () => {
-    const massStart: IBUCompetition = {
-      ...baseCompetition,
-      RaceId: 'BT2526SWRLCP01SWMS',
-      DisciplineId: 'MS',
-      km: '12.5',
-      Description: 'Women 12.5km Mass Start',
-    }
-
-    const duration = estimateDuration(massStart)
-    // Kontiolahti Women Mass Start historical: 38 minutes
-    expect(duration).toBe(38 * 60 * 1000)
-  })
-
-  test('handles single mixed relay', () => {
-    const singleMixedRelay: IBUCompetition = {
-      ...baseCompetition,
-      RaceId: 'BT2526SWRLCP01MXSR',
-      DisciplineId: 'SR',
-      catId: 'MX',
-      km: '2x6+2x7.5',
-      Description: 'Single Mixed Relay',
-    }
-
-    const duration = estimateDuration(singleMixedRelay)
-    // Kontiolahti Single Mixed Relay historical: 38 minutes
-    expect(duration).toBe(38 * 60 * 1000)
-  })
-
-  test('falls back to 90 minutes for unknown discipline/category combo', () => {
-    const unknownCompetition: IBUCompetition = {
-      ...baseCompetition,
-      DisciplineId: 'SI', // Short Individual - only has _default, not SM category
+      RaceId: 'BT2425SWRLCP01SMSP',
       catId: 'SM',
     }
 
-    const duration = estimateDuration(unknownCompetition)
-    // Should use SM default: 45 minutes
-    expect(duration).toBe(45 * 60 * 1000)
+    // Same discipline and category - should be used
+    const matching: IBUCompetition = {
+      ...baseCompetition,
+      RaceId: 'BT2425SWRLCP01SWSP',
+    }
+
+    const matchingResults: IBUResult[] = [
+      makeResult(1, '25:00.0'),
+      makeResult(2, '25:00.0'),
+      makeResult(3, '25:00.0'),
+    ]
+
+    const allCompetitions = [
+      baseCompetition,
+      differentDiscipline,
+      differentCategory,
+      matching,
+    ]
+    const allResults = new Map([
+      [differentDiscipline.RaceId, [makeResult(1, '50:00.0')]],
+      [differentCategory.RaceId, [makeResult(1, '50:00.0')]],
+      [matching.RaceId, matchingResults],
+    ])
+
+    const duration = estimateDuration(
+      baseCompetition,
+      undefined,
+      allCompetitions,
+      allResults,
+    )
+
+    // Should only use matching competition's average: 25 min
+    expect(duration).toBe(25 * 60 * 1000)
+  })
+
+  test('handles relay events correctly - uses team results only', () => {
+    const relayCompetition: IBUCompetition = {
+      ...baseCompetition,
+      RaceId: 'BT2526SWRLCP01SWRL',
+      DisciplineId: 'RL',
+      km: '4x6',
+      Description: 'Women 4x6km Relay',
+    }
+
+    // 5 team results plus individual leg results that should be ignored
+    const results: IBUResult[] = [
+      makeTeamResult(1, '1:10:00.0'),
+      makeTeamResult(2, '1:12:00.0'),
+      makeTeamResult(3, '1:14:00.0'),
+      makeTeamResult(4, '1:16:00.0'),
+      makeTeamResult(5, '1:18:00.0'),
+      // Individual leg results should be ignored
+      { ...makeResult(6, '17:00.0'), IsTeam: false },
+      { ...makeResult(7, '18:00.0'), IsTeam: false },
+    ]
+
+    const duration = estimateDuration(relayCompetition, results)
+    // Average of 5 teams: (70+72+74+76+78)/5 = 74 minutes
+    expect(duration).toBe(74 * 60 * 1000)
+  })
+
+  test('falls back to historical when no team results for relay', () => {
+    const relayCompetition: IBUCompetition = {
+      ...baseCompetition,
+      RaceId: 'BT2526SWRLCP01SWRL',
+      DisciplineId: 'RL',
+      km: '4x6',
+      Description: 'Women 4x6km Relay',
+    }
+
+    // Historical relay with team results
+    const historicalRelay: IBUCompetition = {
+      ...relayCompetition,
+      RaceId: 'BT2425SWRLCP01SWRL',
+    }
+
+    const historicalResults: IBUResult[] = [
+      makeTeamResult(1, '1:15:00.0'),
+      makeTeamResult(2, '1:16:00.0'),
+      makeTeamResult(3, '1:17:00.0'),
+      makeTeamResult(4, '1:18:00.0'),
+      makeTeamResult(5, '1:19:00.0'),
+    ]
+
+    // Only individual leg results for current competition, no team results
+    const individualResults: IBUResult[] = [makeResult(1, '17:00.0')]
+
+    const allCompetitions = [relayCompetition, historicalRelay]
+    const allResults = new Map([[historicalRelay.RaceId, historicalResults]])
+
+    const duration = estimateDuration(
+      relayCompetition,
+      individualResults,
+      allCompetitions,
+      allResults,
+    )
+
+    // Should use historical: (75+76+77+78+79)/5 = 77 minutes
+    expect(duration).toBe(77 * 60 * 1000)
+  })
+
+  test('ignores Lapped results in average', () => {
+    const results: IBUResult[] = [
+      makeResult(1, '20:00.0'),
+      makeResult(2, '21:00.0'),
+      makeResult(3, '22:00.0'),
+      makeResult(4, 'Lapped'),
+      makeResult(5, 'Lapped'),
+    ]
+
+    const duration = estimateDuration(baseCompetition, results)
+    // Only 3 valid results: (20+21+22)/3 = 21 minutes
+    expect(duration).toBe(21 * 60 * 1000)
+  })
+
+  test('prefers current results over historical data', () => {
+    const historicalCompetition: IBUCompetition = {
+      ...baseCompetition,
+      RaceId: 'BT2425SWRLCP01SWSP',
+    }
+
+    const currentResults: IBUResult[] = [
+      makeResult(1, '25:00.0'),
+      makeResult(2, '25:00.0'),
+      makeResult(3, '25:00.0'),
+    ]
+
+    const historicalResults: IBUResult[] = [
+      makeResult(1, '30:00.0'),
+      makeResult(2, '30:00.0'),
+      makeResult(3, '30:00.0'),
+    ]
+
+    const allCompetitions = [baseCompetition, historicalCompetition]
+    const allResults = new Map([
+      [baseCompetition.RaceId, currentResults],
+      [historicalCompetition.RaceId, historicalResults],
+    ])
+
+    const duration = estimateDuration(
+      baseCompetition,
+      currentResults,
+      allCompetitions,
+      allResults,
+    )
+
+    // Should use current results (25 min), not historical (30 min)
+    expect(duration).toBe(25 * 60 * 1000)
   })
 })

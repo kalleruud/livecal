@@ -60,7 +60,9 @@ function eventToIcsEvent(event: IBUEvent): IcsEvent {
 function competitionToIcsEvent(
   competition: IBUCompetition,
   event: IBUEvent,
-  results?: IBUResult[],
+  competitionResults: IBUResult[] | undefined,
+  allCompetitions: IBUCompetition[],
+  allResults: Map<string, IBUResult[]>,
 ): IcsEvent {
   const isCompleted = competition.StatusId >= 10
   const emoji = isCompleted
@@ -68,15 +70,23 @@ function competitionToIcsEvent(
     : DISCIPLINE_EMOJI[competition.DisciplineId] || '📅'
 
   let description = competition.Description
-  if (results && results.length > 0) {
-    const formattedResults = formatResults(results, competition.DisciplineId)
+  if (competitionResults && competitionResults.length > 0) {
+    const formattedResults = formatResults(
+      competitionResults,
+      competition.DisciplineId,
+    )
     if (formattedResults) {
       description += `\n\nTop 10 Results:\n${formattedResults}`
     }
   }
 
   const startTime = new Date(competition.StartTime)
-  const duration = estimateDuration(competition, results)
+  const duration = estimateDuration(
+    competition,
+    competitionResults,
+    allCompetitions,
+    allResults,
+  )
   const endTime = new Date(startTime.getTime() + duration)
 
   return {
@@ -101,6 +111,9 @@ export function buildCalendar(
 
   const wcEvents = events.filter((e) => e.Level === 1)
 
+  // Flatten all competitions for historical duration lookup
+  const allCompetitions = [...competitions.values()].flat()
+
   for (const event of wcEvents) {
     if (params.includeEvents) {
       icsEvents.push(eventToIcsEvent(event))
@@ -111,7 +124,13 @@ export function buildCalendar(
       for (const competition of eventCompetitions) {
         const competitionResults = results.get(competition.RaceId)
         icsEvents.push(
-          competitionToIcsEvent(competition, event, competitionResults),
+          competitionToIcsEvent(
+            competition,
+            event,
+            competitionResults,
+            allCompetitions,
+            results,
+          ),
         )
       }
     }

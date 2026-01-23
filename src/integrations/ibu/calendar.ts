@@ -1,4 +1,4 @@
-import type { IcsAttendee, IcsCalendar, IcsEvent } from 'ts-ics'
+import type { IcsCalendar, IcsEvent } from 'ts-ics'
 import { estimateDuration } from './duration.ts'
 import type {
   DisciplineId,
@@ -146,20 +146,6 @@ function formatStartListOrResults(
   return { title: 'Results', content }
 }
 
-function createAttendees(
-  results: IBUResult[],
-  disciplineId: DisciplineId,
-): IcsAttendee[] {
-  const isRelay = isRelayDiscipline(disciplineId)
-  const filtered = results.filter((r) => r.IsTeam === isRelay)
-
-  return filtered.map((r) => ({
-    // Use IBUId to create a unique email-like identifier
-    email: `${r.IBUId.toLowerCase()}@biathlonresults.com`,
-    name: r.Name,
-  }))
-}
-
 function buildEventUrl(event: IBUEvent): string {
   return `https://www.biathlonworld.com/calendar?CupLevel=${event.Level}&SeasonId=${event.SeasonId}&EventId=${event.EventId}`
 }
@@ -224,12 +210,6 @@ function competitionToIcsEvent(
   )
   const endTime = new Date(startTime.getTime() + duration)
 
-  // Create attendees from participants
-  const attendees =
-    resultsData && resultsData.results.length > 0
-      ? createAttendees(resultsData.results, competition.DisciplineId)
-      : undefined
-
   return {
     uid: competition.RaceId,
     stamp: { date: new Date() },
@@ -239,7 +219,6 @@ function competitionToIcsEvent(
     description,
     location: `${competition.Location}, ${event.ShortDescription}`,
     url: buildCompetitionUrl(competition),
-    attendees,
   }
 }
 

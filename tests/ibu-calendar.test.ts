@@ -415,26 +415,6 @@ describe('IBU Calendar Output', () => {
     expect(ics).not.toContain('✅ Women 12.5km Mass Start')
   })
 
-  test('adds attendees for participants', () => {
-    const events = [mockEvent]
-    const competitions = new Map([[mockEvent.EventId, [mockSprintCompetition]]])
-    const results = new Map([
-      [mockSprintCompetition.RaceId, resultsData(mockSprintResults)],
-    ])
-
-    const calendar = buildCalendar(events, competitions, results, {
-      includeEvents: false,
-      includeComps: true,
-    })
-
-    const ics = generateIcsCalendar(calendar)
-
-    // Athletes as attendees
-    expect(ics).toContain('ATTENDEE')
-    expect(ics).toContain('btnor12345678901@biathlonresults.com')
-    expect(ics).toContain('ECKHOFF Tiril')
-  })
-
   test('includes relay penalty info', () => {
     const events = [mockEvent]
     const competitions = new Map([[mockEvent.EventId, [mockRelayCompetition]]])

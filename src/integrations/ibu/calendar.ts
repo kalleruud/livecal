@@ -6,6 +6,7 @@ import type {
   IBUEvent,
   IBUQueryParams,
   IBUResult,
+  StartMode,
 } from './types.ts'
 
 const DISCIPLINE_EMOJI: Record<DisciplineId, string> = {
@@ -18,8 +19,85 @@ const DISCIPLINE_EMOJI: Record<DisciplineId, string> = {
   SR: '🔄',
 }
 
+const DISCIPLINE_NAME: Record<DisciplineId, string> = {
+  SP: 'Sprint',
+  PU: 'Pursuit',
+  IN: 'Individual',
+  SI: 'Short Individual',
+  MS: 'Mass Start',
+  RL: 'Relay',
+  SR: 'Single Mixed Relay',
+}
+
+const START_MODE_NAME: Record<StartMode, string> = {
+  M: 'Mass Start',
+  I: 'Interval Start',
+  P: 'Pursuit Start',
+  H: 'Handicap Start',
+}
+
 function isRelayDiscipline(disciplineId: DisciplineId): boolean {
   return disciplineId === 'RL' || disciplineId === 'SR'
+}
+
+function formatShootingPositions(positions?: string): string {
+  if (!positions) return ''
+  return positions
+    .split('')
+    .map((p) => (p === 'P' ? 'Prone' : 'Standing'))
+    .join(' → ')
+}
+
+function formatCompetitionDetails(competition: IBUCompetition): string {
+  const lines: string[] = []
+
+  // Distance (skip if empty)
+  if (competition.km) {
+    lines.push(`Distance: ${competition.km} km`)
+  }
+
+  // Discipline type
+  const disciplineName = DISCIPLINE_NAME[competition.DisciplineId]
+  if (disciplineName) {
+    lines.push(`Type: ${disciplineName}`)
+  }
+
+  // Start mode
+  if (competition.StartMode) {
+    const startModeName = START_MODE_NAME[competition.StartMode]
+    if (startModeName) {
+      lines.push(`Start: ${startModeName}`)
+    }
+  }
+
+  // Shooting details
+  if (competition.NrShootings) {
+    let shootingInfo = `Shootings: ${competition.NrShootings}`
+    const positions = formatShootingPositions(competition.ShootingPositions)
+    if (positions) {
+      shootingInfo += ` (${positions})`
+    }
+    lines.push(shootingInfo)
+  }
+
+  // Penalty info
+  if (competition.PenaltySeconds && competition.PenaltySeconds > 0) {
+    lines.push(`Penalty: ${competition.PenaltySeconds}s per miss`)
+  } else if (isRelayDiscipline(competition.DisciplineId)) {
+    lines.push('Penalty: 150m loop per miss')
+  }
+
+  // Spare rounds for relays
+  if (competition.HasSpareRounds && competition.NrSpareRounds) {
+    lines.push(`Spare rounds: ${competition.NrSpareRounds} per shooting`)
+  }
+
+  // Relay legs
+  if (competition.NrLegs && competition.NrLegs > 1) {
+    lines.push(`Legs: ${competition.NrLegs}`)
+  }
+
+  return lines.join('\n')
 }
 
 function formatResults(
@@ -69,16 +147,27 @@ function competitionToIcsEvent(
     ? '✅'
     : DISCIPLINE_EMOJI[competition.DisciplineId] || '📅'
 
-  let description = competition.Description
+  // Build description with competition details
+  const descriptionParts: string[] = []
+
+  // Add race format details
+  const details = formatCompetitionDetails(competition)
+  if (details) {
+    descriptionParts.push(details)
+  }
+
+  // Add results if available
   if (competitionResults && competitionResults.length > 0) {
     const formattedResults = formatResults(
       competitionResults,
       competition.DisciplineId,
     )
     if (formattedResults) {
-      description += `\n\nTop 10 Results:\n${formattedResults}`
+      descriptionParts.push(`Results:\n${formattedResults}`)
     }
   }
+
+  const description = descriptionParts.join('\n\n')
 
   const startTime = new Date(competition.StartTime)
   const duration = estimateDuration(

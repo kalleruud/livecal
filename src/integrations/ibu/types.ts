@@ -19,6 +19,8 @@ export interface IBUEvent {
 export type CategoryId = 'SM' | 'SW' | 'MX'
 export type DisciplineId = 'SP' | 'PU' | 'IN' | 'SI' | 'MS' | 'RL' | 'SR'
 
+export type StartMode = 'M' | 'I' | 'P' | 'H' // Mass, Interval, Pursuit, Handicap
+
 export interface IBUCompetition {
   RaceId: string
   km: string
@@ -31,6 +33,13 @@ export interface IBUCompetition {
   ShortDescription: string
   Location: string
   LocalUTCOffset: number
+  NrShootings?: number
+  ShootingPositions?: string // e.g., "PS" (Prone+Standing), "PPSS"
+  StartMode?: StartMode
+  NrLegs?: number
+  PenaltySeconds?: number
+  HasSpareRounds?: boolean
+  NrSpareRounds?: number
 }
 
 export interface IBUResult {

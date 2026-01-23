@@ -69,13 +69,7 @@ livecal/
 │       └── date.ts                 # Date formatting helpers
 │
 └── tests/
-    ├── setup.ts                    # Test setup and global mocks
-    ├── server/
-    │   └── cache.test.ts           # Cache service tests
-    └── integrations/
-        └── ibu/
-            ├── service.test.ts     # IBU service tests
-            └── api.test.ts         # IBU API client tests
+    └── ibu-calendar.test.ts        # Calendar output tests
 ```
 
 ## Integration Interface
@@ -246,7 +240,7 @@ export function getAllRoutes(): Route[] {
 }
 ```
 
-4. Add tests under `tests/integrations/myservice/`
+4. Add tests for the calendar output in `tests/`
 
 5. Update the main README with the new integration
 
@@ -300,7 +294,7 @@ cp .env.example .env
 
 ## Testing
 
-Tests are written using [Bun's built-in test runner](https://bun.sh/docs/cli/test) and located in the `tests/` directory.
+Tests are written using [Bun's built-in test runner](https://bun.sh/docs/cli/test) and located in the `tests/` directory. Tests focus on verifying the final calendar output.
 
 ```bash
 # Run all tests
@@ -309,12 +303,6 @@ bun test
 # Run tests in watch mode
 bun test --watch
 ```
-
-### Test Structure
-
-- **Unit tests:** Test individual functions and utilities
-- **Integration tests:** Test API endpoints and service interactions
-- **Mocking:** External API calls are mocked using `mock` from `bun:test`
 
 ## Docker
 

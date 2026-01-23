@@ -114,8 +114,18 @@ function formatStartListOrResults(
   }
 
   if (isStartList) {
+    // Filter out athletes without valid bib numbers (reserves/withdrawn)
+    const withBib = filtered.filter(
+      (r) =>
+        r.Bib && r.Bib !== 'null' && !Number.isNaN(Number.parseInt(r.Bib, 10)),
+    )
+
+    if (withBib.length === 0) {
+      return null
+    }
+
     // Format as start list - sort by Bib number
-    const sorted = [...filtered].sort(
+    const sorted = [...withBib].sort(
       (a, b) => Number.parseInt(a.Bib, 10) - Number.parseInt(b.Bib, 10),
     )
 

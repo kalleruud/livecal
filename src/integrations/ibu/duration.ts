@@ -41,9 +41,13 @@ const FALLBACK_DURATION_MS = 90 * 60 * 1000
  * Get the average duration of the last 5 finishers from results
  */
 function getLast5FinishersAverage(
-  results: IBUResult[],
+  results: IBUResult[] | undefined,
   isRelay: boolean,
 ): number | null {
+  if (!results || !Array.isArray(results)) {
+    return null
+  }
+
   const filtered = results.filter((r) => r.IsTeam === isRelay && r.TotalTime)
 
   if (filtered.length === 0) {
@@ -109,7 +113,11 @@ function calculateAverageDuration(
 
   for (const comp of competitions) {
     const resultsData = allResults.get(comp.RaceId)
-    if (resultsData && !resultsData.isStartList) {
+    if (
+      resultsData &&
+      !resultsData.isStartList &&
+      Array.isArray(resultsData.results)
+    ) {
       const avg = getLast5FinishersAverage(resultsData.results, isRelay)
       if (avg && avg > 0) {
         durations.push(avg)
@@ -142,7 +150,8 @@ function getHistoricalDuration(
       c.DisciplineId === disciplineId &&
       c.catId === catId &&
       data &&
-      !data.isStartList
+      !data.isStartList &&
+      Array.isArray(data.results)
     )
   })
 
@@ -172,7 +181,12 @@ function getSimilarEventDuration(
   // Find competitions with same discipline (any category) and similar distance that have results
   const similarCompetitions = allCompetitions.filter((c) => {
     const data = allResults.get(c.RaceId)
-    if (c.DisciplineId !== disciplineId || !data || data.isStartList) {
+    if (
+      c.DisciplineId !== disciplineId ||
+      !data ||
+      data.isStartList ||
+      !Array.isArray(data.results)
+    ) {
       return false
     }
     const compDistance = parseDistance(c.km)

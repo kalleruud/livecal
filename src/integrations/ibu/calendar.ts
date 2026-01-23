@@ -140,6 +140,10 @@ function formatStartListOrResults(
     .map((r) => {
       const name = isRelay ? r.ShortName : `${r.ShortName} (${r.Nat})`
       const time = r.TotalTime || 'DNF'
+      // Skip rank number for DNF (no valid rank)
+      if (!r.Rank || r.Rank === 'null') {
+        return `${name} - ${time}`
+      }
       return `${r.Rank}. ${name} - ${time}`
     })
     .join('\n')

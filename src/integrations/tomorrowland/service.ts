@@ -43,13 +43,13 @@ export class TomorrowlandIntegration implements IntegrationService {
           const cacheKey = this.getCacheKey(params)
           let icsContent = await cache.get(cacheKey)
 
-          if (!icsContent) {
+          if (icsContent) {
+            console.log(`Cache hit for ${cacheKey}`)
+          } else {
             console.log(`Cache miss for ${cacheKey}, fetching from API...`)
             const calendar = await this.getCalendar(params)
             icsContent = generateIcsCalendar(calendar)
             await cache.set(cacheKey, icsContent)
-          } else {
-            console.log(`Cache hit for ${cacheKey}`)
           }
 
           const contentType = req.headers.get('Content-Type')

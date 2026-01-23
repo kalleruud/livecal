@@ -71,7 +71,7 @@ function getStageHost(
   stages: TomorrowlandStageInfo[],
 ): string | undefined {
   const stage = stages.find((s) => s.id === stageId)
-  if (stage && stage.hosts[date]) {
+  if (stage?.hosts[date]) {
     return stage.hosts[date]
   }
   return undefined

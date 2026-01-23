@@ -100,19 +100,49 @@ function formatCompetitionDetails(competition: IBUCompetition): string {
   return lines.join('\n')
 }
 
-function formatResults(
+function formatStartListOrResults(
   results: IBUResult[],
   disciplineId: DisciplineId,
-): string {
+): { title: string; content: string } | null {
   const isRelay = isRelayDiscipline(disciplineId)
   const filtered = results.filter((r) => r.IsTeam === isRelay)
-  const top10 = filtered.slice(0, 10)
-  return top10
+
+  if (filtered.length === 0) {
+    return null
+  }
+
+  // Sort by ResultOrder first, then by StartOrder
+  const sorted = [...filtered].sort((a, b) => {
+    if (a.ResultOrder !== b.ResultOrder) {
+      return a.ResultOrder - b.ResultOrder
+    }
+    return a.StartOrder - b.StartOrder
+  })
+
+  // Determine if this is a start list or results
+  // It's a start list if the first entry has no Rank
+  const isStartList = !sorted[0].Rank
+
+  if (isStartList) {
+    // Format as start list
+    const content = sorted
+      .map((r) => {
+        const name = isRelay ? r.ShortName : `${r.ShortName} (${r.Nat})`
+        return `${r.Bib}. ${name}`
+      })
+      .join('\n')
+    return { title: 'Start List', content }
+  }
+
+  // Format as results
+  const content = sorted
     .map((r) => {
       const name = isRelay ? r.ShortName : `${r.ShortName} (${r.Nat})`
-      return `${r.Rank}. ${name} - ${r.TotalTime}`
+      const time = r.TotalTime || 'DNF'
+      return `${r.Rank}. ${name} - ${time}`
     })
     .join('\n')
+  return { title: 'Results', content }
 }
 
 function buildEventUrl(event: IBUEvent): string {
@@ -156,14 +186,14 @@ function competitionToIcsEvent(
     descriptionParts.push(details)
   }
 
-  // Add results if available
+  // Add start list or results if available
   if (competitionResults && competitionResults.length > 0) {
-    const formattedResults = formatResults(
+    const formatted = formatStartListOrResults(
       competitionResults,
       competition.DisciplineId,
     )
-    if (formattedResults) {
-      descriptionParts.push(`Results:\n${formattedResults}`)
+    if (formatted) {
+      descriptionParts.push(`${formatted.title}:\n${formatted.content}`)
     }
   }
 

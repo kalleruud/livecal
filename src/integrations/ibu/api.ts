@@ -59,10 +59,11 @@ export async function fetchResults(
   const map = new Map<string, IBUResult[]>()
   const allCompetitions = [...competitions.values()].flat()
 
-  const completedCompetitions = allCompetitions.filter((c) => c.StatusId >= 10)
+  // Fetch for competitions with start list or results (StatusId >= 2)
+  const competitionsWithData = allCompetitions.filter((c) => c.StatusId >= 2)
 
   await Promise.all(
-    completedCompetitions.map(async (competition) => {
+    competitionsWithData.map(async (competition) => {
       const response = await fetch(
         `${BASE_URL}/Results?RaceId=${competition.RaceId}&Language=en`,
       )
@@ -71,7 +72,7 @@ export async function fetchResults(
         return
       }
       const data = (await response.json()) as IBUResultsResponse
-      if (data.IsResult && data.Results) {
+      if (data.Results && data.Results.length > 0) {
         map.set(competition.RaceId, data.Results)
       }
     }),

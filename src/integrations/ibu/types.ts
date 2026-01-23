@@ -43,15 +43,17 @@ export interface IBUCompetition {
 }
 
 export interface IBUResult {
+  StartOrder: number
   ResultOrder: number
   IsTeam: boolean
   Name: string
   ShortName: string
   Nat: string
-  Rank: string
+  Rank: string | null
+  Bib: string
   Shootings: string
-  TotalTime: string
-  Behind: string
+  TotalTime: string | null
+  Behind: string | null
 }
 
 export interface IBUResultsResponse {

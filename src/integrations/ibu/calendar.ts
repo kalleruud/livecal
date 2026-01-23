@@ -100,6 +100,14 @@ function formatCompetitionDetails(competition: IBUCompetition): string {
   return lines.join('\n')
 }
 
+function hasValidRank(rank: string | null): boolean {
+  return rank !== null && rank !== '' && rank !== 'null'
+}
+
+function hasValidTime(time: string | null): boolean {
+  return time !== null && time !== '' && time !== 'null'
+}
+
 function formatStartListOrResults(
   results: IBUResult[],
   disciplineId: DisciplineId,
@@ -111,38 +119,44 @@ function formatStartListOrResults(
     return null
   }
 
-  // Sort by ResultOrder first, then by StartOrder
-  const sorted = [...filtered].sort((a, b) => {
-    if (a.ResultOrder !== b.ResultOrder) {
-      return a.ResultOrder - b.ResultOrder
-    }
-    return a.StartOrder - b.StartOrder
-  })
-
   // Determine if this is a start list or results
-  // It's a start list if the first entry has no Rank
-  const isStartList = !sorted[0].Rank
+  // It's a start list if no entry has a valid Rank and TotalTime
+  const hasAnyResults = filtered.some(
+    (r) => hasValidRank(r.Rank) && hasValidTime(r.TotalTime),
+  )
 
-  if (isStartList) {
-    // Format as start list
+  if (hasAnyResults) {
+    // Format as results - sort by ResultOrder, then StartOrder
+    const sorted = [...filtered].sort((a, b) => {
+      if (a.ResultOrder !== b.ResultOrder) {
+        return a.ResultOrder - b.ResultOrder
+      }
+      return a.StartOrder - b.StartOrder
+    })
+
     const content = sorted
       .map((r) => {
         const name = isRelay ? r.ShortName : `${r.ShortName} (${r.Nat})`
-        return `${r.Bib}. ${name}`
+        const time = hasValidTime(r.TotalTime) ? r.TotalTime : 'DNF'
+        const rank = hasValidRank(r.Rank) ? r.Rank : '-'
+        return `${rank}. ${name} - ${time}`
       })
       .join('\n')
-    return { title: 'Start List', content }
+    return { title: 'Results', content }
   }
 
-  // Format as results
+  // Format as start list - sort by Bib number
+  const sorted = [...filtered].sort(
+    (a, b) => Number.parseInt(a.Bib, 10) - Number.parseInt(b.Bib, 10),
+  )
+
   const content = sorted
     .map((r) => {
       const name = isRelay ? r.ShortName : `${r.ShortName} (${r.Nat})`
-      const time = r.TotalTime || 'DNF'
-      return `${r.Rank}. ${name} - ${time}`
+      return `${r.Bib}. ${name}`
     })
     .join('\n')
-  return { title: 'Results', content }
+  return { title: 'Start List', content }
 }
 
 function createAttendees(

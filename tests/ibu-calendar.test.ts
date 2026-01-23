@@ -174,6 +174,20 @@ const mockRelayResults: IBUResult[] = [
 
 const mockStartList: IBUResult[] = [
   {
+    StartOrder: 2,
+    ResultOrder: 2,
+    IBUId: 'BTFRA12345678901',
+    IsTeam: false,
+    Name: 'SIMON Julia',
+    ShortName: 'SIMON J.',
+    Nat: 'FRA',
+    Rank: null,
+    Bib: '5',
+    Shootings: '',
+    TotalTime: null,
+    Behind: null,
+  },
+  {
     StartOrder: 1,
     ResultOrder: 1,
     IBUId: 'BTNOR12345678901',
@@ -183,20 +197,6 @@ const mockStartList: IBUResult[] = [
     Nat: 'NOR',
     Rank: null,
     Bib: '1',
-    Shootings: '',
-    TotalTime: null,
-    Behind: null,
-  },
-  {
-    StartOrder: 2,
-    ResultOrder: 2,
-    IBUId: 'BTFRA12345678901',
-    IsTeam: false,
-    Name: 'SIMON Julia',
-    ShortName: 'SIMON J.',
-    Nat: 'FRA',
-    Rank: null,
-    Bib: '2',
     Shootings: '',
     TotalTime: null,
     Behind: null,
@@ -300,8 +300,67 @@ describe('IBU Calendar Output', () => {
     // Check calendar object directly to avoid ICS line-folding issues
     const event = calendar.events?.[0]
     expect(event?.description).toContain('Start List:')
+    // Should be sorted by Bib number
     expect(event?.description).toContain('1. ECKHOFF T. (NOR)')
-    expect(event?.description).toContain('2. SIMON J. (FRA)')
+    expect(event?.description).toContain('5. SIMON J. (FRA)')
+    // Verify order: Bib 1 should come before Bib 5
+    const desc = event?.description || ''
+    expect(desc.indexOf('1. ECKHOFF')).toBeLessThan(desc.indexOf('5. SIMON'))
+  })
+
+  test('treats "null" strings as start list (API quirk)', () => {
+    // Sometimes the API returns "null" as a string instead of actual null
+    const mockStartListWithNullStrings: IBUResult[] = [
+      {
+        StartOrder: 1,
+        ResultOrder: 1,
+        IBUId: 'BTITA12345678901',
+        IsTeam: false,
+        Name: 'GIACOMEL Tommaso',
+        ShortName: 'GIACOMEL T.',
+        Nat: 'ITA',
+        Rank: 'null' as unknown as null, // API returns "null" string
+        Bib: '1',
+        Shootings: '',
+        TotalTime: 'null' as unknown as null, // API returns "null" string
+        Behind: null,
+      },
+      {
+        StartOrder: 2,
+        ResultOrder: 2,
+        IBUId: 'BTFRA12345678902',
+        IsTeam: false,
+        Name: 'PERROT Eric',
+        ShortName: 'PERROT E.',
+        Nat: 'FRA',
+        Rank: 'null' as unknown as null,
+        Bib: '2',
+        Shootings: '',
+        TotalTime: 'null' as unknown as null,
+        Behind: null,
+      },
+    ]
+
+    const scheduledComp = { ...mockScheduledCompetition, StatusId: 3 }
+    const events = [mockEvent]
+    const competitions = new Map([[mockEvent.EventId, [scheduledComp]]])
+    const results = new Map([
+      [scheduledComp.RaceId, mockStartListWithNullStrings],
+    ])
+
+    const calendar = buildCalendar(events, competitions, results, {
+      includeEvents: false,
+      includeComps: true,
+    })
+
+    const event = calendar.events?.[0]
+    // Should be treated as start list, not results
+    expect(event?.description).toContain('Start List:')
+    expect(event?.description).not.toContain('Results:')
+    // Should show bib numbers, not "null"
+    expect(event?.description).toContain('1. GIACOMEL T. (ITA)')
+    expect(event?.description).toContain('2. PERROT E. (FRA)')
+    expect(event?.description).not.toContain('null.')
   })
 
   test('filters relay results to show only team results', () => {

@@ -45,12 +45,15 @@ describe('estimateDuration', () => {
 
   function makeResult(order: number, time: string): IBUResult {
     return {
+      StartOrder: order,
       ResultOrder: order,
+      IBUId: `BTFIN0000000000${order}`,
       IsTeam: false,
       Name: `Athlete ${order}`,
       ShortName: `A. ${order}`,
       Nat: 'FIN',
       Rank: String(order),
+      Bib: String(order),
       Shootings: '0+0',
       TotalTime: time,
       Behind: '0.0',
@@ -59,12 +62,15 @@ describe('estimateDuration', () => {
 
   function makeTeamResult(order: number, time: string): IBUResult {
     return {
+      StartOrder: order,
       ResultOrder: order,
+      IBUId: `BTFIN0000000000${order}`,
       IsTeam: true,
       Name: `Team ${order}`,
       ShortName: `TEAM${order}`,
       Nat: 'FIN',
       Rank: String(order),
+      Bib: String(order),
       Shootings: '0+0',
       TotalTime: time,
       Behind: '0.0',

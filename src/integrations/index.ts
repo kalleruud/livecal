@@ -1,6 +1,6 @@
 import { IBUIntegration } from './ibu/service.ts'
-import { TomorrowlandIntegration } from './tomorrowland/service.ts'
 import type { IntegrationService, Route } from './interface.ts'
+import { TomorrowlandIntegration } from './tomorrowland/service.ts'
 
 export const integrations: IntegrationService[] = [
   new IBUIntegration(),

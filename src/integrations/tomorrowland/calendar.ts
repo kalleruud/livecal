@@ -44,13 +44,12 @@ function filterPerformances(
 
   if (params.artists && params.artists.length > 0) {
     const artistFilters = params.artists.map((a) => a.toLowerCase())
-    filtered = filtered.filter(
-      (p) =>
-        artistFilters.some(
-          (filter) =>
-            p.name.toLowerCase().includes(filter) ||
-            p.artists.some((a) => a.name.toLowerCase().includes(filter)),
-        ),
+    filtered = filtered.filter((p) =>
+      artistFilters.some(
+        (filter) =>
+          p.name.toLowerCase().includes(filter) ||
+          p.artists.some((a) => a.name.toLowerCase().includes(filter)),
+      ),
     )
   }
 
@@ -86,7 +85,11 @@ export function buildCalendar(
   const filtered = filterPerformances(performances, params)
 
   const icsEvents = filtered.map((performance) => {
-    const stageHost = getStageHost(performance.stage.id, performance.date, stages)
+    const stageHost = getStageHost(
+      performance.stage.id,
+      performance.date,
+      stages,
+    )
     return performanceToIcsEvent(performance, stageHost)
   })
 

@@ -1,6 +1,6 @@
 # Livecal
 
-This is a super minimal server that ports external APIs to simple webcal endpoints.
+A minimal server that converts external APIs into webcal/ICS calendar subscriptions.
 
 ## Tech Stack
 
@@ -12,13 +12,14 @@ This is a super minimal server that ports external APIs to simple webcal endpoin
 
 ## Features
 
-- Caches responses on disk, updates every hour (configurable via CRON schedule in env variables)
-- Event titles prefixed with emojis representing event type
+- Disk caching with configurable CRON-based refresh
+- Integration-specific query parameters for customization
+- Emoji prefixes for event types
 - Completed events marked with ✅
 
 ## Documentation
 
-Feature specifications and design documents live in the `docs/` folder.
+Feature specifications live in the `docs/` folder.
 
 | Document | Description |
 | -------- | ----------- |
@@ -34,39 +35,38 @@ Each integration lives in its own folder under `src/integrations/` with its own 
 | ----------- | -------- | ------------- |
 | IBU Biathlon World Cup | `/api/ibu/wc.ics` | [src/integrations/ibu/README.md](src/integrations/ibu/README.md) |
 
-> More coming soon...
-
 See [Adding a New Integration](#adding-a-new-integration) for how to create new integrations.
 
 ## File Structure
 
 ```
 livecal/
-├── docs/                          # Feature documentation
-│   └── *.md                       # Detailed feature specifications
+├── docs/                           # Feature documentation
+│   ├── cache.md                    # Disk caching
+│   ├── scheduler.md                # CRON scheduler
+│   └── server.md                   # HTTP server & routing
+│
 ├── src/
 │   ├── index.ts                    # Application entry point (Bun.serve)
 │   │
-│   ├── server/                     # Server setup and core functionality
+│   ├── server/                     # Server core functionality
 │   │   ├── router.ts               # Route definitions and request handling
 │   │   ├── cache.ts                # Disk caching logic
 │   │   └── scheduler.ts            # CRON scheduler for cache updates
 │   │
 │   ├── integrations/               # All calendar integrations
-│   │   ├── index.ts                # Integration registry and loader
-│   │   ├── interface.ts            # Common interface all services implement
+│   │   ├── index.ts                # Integration registry
+│   │   ├── interface.ts            # IntegrationService interface
 │   │   │
 │   │   └── ibu/                    # IBU Biathlon integration
-│   │       ├── README.md           # Integration-specific documentation
-│   │       ├── types.ts            # IBU API response types
-│   │       ├── service.ts          # Implements IntegrationService interface
-│   │       ├── api.ts              # IBU API client
-│   │       └── calendar.ts         # IBU-specific calendar event builder
+│   │       ├── README.md           # Integration documentation
+│   │       ├── types.ts            # API response types
+│   │       ├── service.ts          # IntegrationService implementation
+│   │       ├── api.ts              # External API client
+│   │       ├── calendar.ts         # ICS calendar builder
+│   │       └── duration.ts         # Event duration estimation
 │   │
-│   └── shared/                     # Shared utilities
-│       ├── types.ts                # Common types (CalendarEvent, etc.)
-│       ├── calendar.ts             # ts-ics wrapper utilities
-│       └── date.ts                 # Date formatting helpers
+│   └── static/                     # Static files (homepage, etc.)
 │
 └── tests/
     └── ibu-calendar.test.ts        # Calendar output tests
@@ -79,73 +79,32 @@ All integrations implement the same interface, making it easy to add new calenda
 ### Interface Definition (`src/integrations/interface.ts`)
 
 ```typescript
-import type { VCalendar } from "ts-ics";
+import type { IcsCalendar } from 'ts-ics'
 
-/**
- * Configuration for an integration
- */
 export interface IntegrationConfig {
-  /** Unique identifier for this integration */
-  id: string;
-  /** Display name */
-  name: string;
-  /** Base path for routes (e.g., "/api/ibu") */
-  basePath: string;
-  /** CRON expression for cache updates */
-  cacheCron?: string;
+  id: string
+  name: string
+  basePath: string
+  cacheCron?: string
 }
 
-/**
- * Query parameters parsed from the request
- */
 export interface QueryParams {
-  [key: string]: string | boolean | undefined;
+  [key: string]: string | boolean | undefined
 }
 
-/**
- * Route handler function type
- */
-export type RouteHandler = (req: Request) => Response | Promise<Response>;
+export type RouteHandler = (req: Request) => Response | Promise<Response>
 
-/**
- * Route definition for an integration
- */
 export interface Route {
-  path: string;
-  handler: RouteHandler;
+  path: string
+  handler: RouteHandler
 }
 
-/**
- * All integration services must implement this interface
- */
 export interface IntegrationService {
-  /** Integration configuration */
-  readonly config: IntegrationConfig;
-
-  /**
-   * Fetch data from external API and return calendar events
-   * @param params - Query parameters from the request
-   * @returns Promise resolving to a VCalendar object
-   */
-  getCalendar(params: QueryParams): Promise<VCalendar>;
-
-  /**
-   * Get routes for this integration
-   * @returns Array of route definitions
-   */
-  getRoutes(): Route[];
-
-  /**
-   * Validate query parameters
-   * @returns null if valid, error message if invalid
-   */
-  validateParams(params: QueryParams): string | null;
-
-  /**
-   * Get cache key for the given parameters
-   * Used for disk caching
-   */
-  getCacheKey(params: QueryParams): string;
+  readonly config: IntegrationConfig
+  getCalendar(params: QueryParams): Promise<IcsCalendar>
+  getRoutes(): Route[]
+  validateParams(params: QueryParams): string | null
+  getCacheKey(params: QueryParams): string
 }
 ```
 
@@ -156,38 +115,40 @@ export interface IntegrationService {
 ```
 src/integrations/
 └── myservice/
-    ├── README.md       # Documentation for this integration
+    ├── README.md       # Integration documentation
     ├── types.ts        # API response types
-    ├── service.ts      # Implements IntegrationService
+    ├── service.ts      # IntegrationService implementation
     ├── api.ts          # External API client
-    └── calendar.ts     # Calendar event builder
+    └── calendar.ts     # ICS calendar builder
 ```
 
 2. Implement the service (`service.ts`):
 
 ```typescript
-import type { VCalendar } from "ts-ics";
+import type { IcsCalendar } from 'ts-ics'
+import { generateIcsCalendar } from 'ts-ics'
+import * as cache from '../../server/cache.ts'
 import type {
   IntegrationConfig,
   IntegrationService,
   QueryParams,
   Route,
-} from "../interface";
-import { fetchData } from "./api";
-import { buildCalendar } from "./calendar";
+} from '../interface.ts'
+import { fetchData } from './api.ts'
+import { buildCalendar } from './calendar.ts'
 
 const config: IntegrationConfig = {
-  id: "myservice",
-  name: "My Service",
-  basePath: "/api/myservice",
-};
+  id: 'myservice',
+  name: 'My Service',
+  basePath: '/api/myservice',
+}
 
 export class MyServiceIntegration implements IntegrationService {
-  readonly config = config;
+  readonly config = config
 
-  async getCalendar(params: QueryParams): Promise<VCalendar> {
-    const data = await fetchData(params);
-    return buildCalendar(data);
+  async getCalendar(params: QueryParams): Promise<IcsCalendar> {
+    const data = await fetchData(params)
+    return buildCalendar(data)
   }
 
   getRoutes(): Route[] {
@@ -195,30 +156,38 @@ export class MyServiceIntegration implements IntegrationService {
       {
         path: `${this.config.basePath}/calendar.ics`,
         handler: async (req: Request) => {
-          const url = new URL(req.url);
-          const params = Object.fromEntries(url.searchParams);
+          const url = new URL(req.url)
+          const params = Object.fromEntries(url.searchParams)
 
-          const error = this.validateParams(params);
+          const error = this.validateParams(params)
           if (error) {
-            return new Response(error, { status: 400 });
+            return new Response(error, { status: 400 })
           }
 
-          const calendar = await this.getCalendar(params);
-          return new Response(calendar.toString(), {
-            headers: { "Content-Type": "text/calendar; charset=utf-8" },
-          });
+          const cacheKey = this.getCacheKey(params)
+          let icsContent = await cache.get(cacheKey)
+
+          if (!icsContent) {
+            const calendar = await this.getCalendar(params)
+            icsContent = generateIcsCalendar(calendar)
+            await cache.set(cacheKey, icsContent)
+          }
+
+          return new Response(icsContent, {
+            headers: { 'Content-Type': 'text/calendar; charset=utf-8' },
+          })
         },
       },
-    ];
+    ]
   }
 
   validateParams(params: QueryParams): string | null {
-    // Validate parameters, return error message or null
-    return null;
+    // Return error message if invalid, null if valid
+    return null
   }
 
   getCacheKey(params: QueryParams): string {
-    return `myservice-${JSON.stringify(params)}`;
+    return `myservice-calendar.ics`
   }
 }
 ```
@@ -226,23 +195,23 @@ export class MyServiceIntegration implements IntegrationService {
 3. Register the integration (`src/integrations/index.ts`):
 
 ```typescript
-import type { IntegrationService, Route } from "./interface";
-import { IBUIntegration } from "./ibu/service";
-import { MyServiceIntegration } from "./myservice/service";
+import { IBUIntegration } from './ibu/service.ts'
+import { MyServiceIntegration } from './myservice/service.ts'
+import type { IntegrationService, Route } from './interface.ts'
 
 export const integrations: IntegrationService[] = [
   new IBUIntegration(),
   new MyServiceIntegration(),
-];
+]
 
 export function getAllRoutes(): Route[] {
-  return integrations.flatMap((integration) => integration.getRoutes());
+  return integrations.flatMap((integration) => integration.getRoutes())
 }
 ```
 
-4. Add tests for the calendar output in `tests/`
+4. Add tests for the calendar output in `tests/myservice-calendar.test.ts`
 
-5. Update the main README with the new integration
+5. Update this README with the new integration endpoint
 
 ## Environment Variables
 
@@ -294,7 +263,7 @@ cp .env.example .env
 
 ## Testing
 
-Tests are written using [Bun's built-in test runner](https://bun.sh/docs/cli/test) and located in the `tests/` directory. Tests focus on verifying the final calendar output.
+Tests use [Bun's test runner](https://bun.sh/docs/cli/test) and focus on verifying the final ICS calendar output for each integration.
 
 ```bash
 # Run all tests
@@ -302,7 +271,12 @@ bun test
 
 # Run tests in watch mode
 bun test --watch
+
+# Run specific test file
+bun test tests/ibu-calendar.test.ts
 ```
+
+Test files are named `{integration}-calendar.test.ts` and test the `buildCalendar()` function output.
 
 ## Docker
 

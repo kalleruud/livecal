@@ -6,6 +6,7 @@ import type {
   IBUEvent,
   IBUQueryParams,
   IBUResult,
+  IBUResultsData,
   StartMode,
 } from './types.ts'
 
@@ -100,17 +101,10 @@ function formatCompetitionDetails(competition: IBUCompetition): string {
   return lines.join('\n')
 }
 
-function hasValidRank(rank: string | null): boolean {
-  return rank !== null && rank !== '' && rank !== 'null'
-}
-
-function hasValidTime(time: string | null): boolean {
-  return time !== null && time !== '' && time !== 'null'
-}
-
 function formatStartListOrResults(
   results: IBUResult[],
   disciplineId: DisciplineId,
+  isStartList: boolean,
 ): { title: string; content: string } | null {
   const isRelay = isRelayDiscipline(disciplineId)
   const filtered = results.filter((r) => r.IsTeam === isRelay)
@@ -119,44 +113,37 @@ function formatStartListOrResults(
     return null
   }
 
-  // Determine if this is a start list or results
-  // It's a start list if no entry has a valid Rank and TotalTime
-  const hasAnyResults = filtered.some(
-    (r) => hasValidRank(r.Rank) && hasValidTime(r.TotalTime),
-  )
-
-  if (hasAnyResults) {
-    // Format as results - sort by ResultOrder, then StartOrder
-    const sorted = [...filtered].sort((a, b) => {
-      if (a.ResultOrder !== b.ResultOrder) {
-        return a.ResultOrder - b.ResultOrder
-      }
-      return a.StartOrder - b.StartOrder
-    })
+  if (isStartList) {
+    // Format as start list - sort by Bib number
+    const sorted = [...filtered].sort(
+      (a, b) => Number.parseInt(a.Bib, 10) - Number.parseInt(b.Bib, 10),
+    )
 
     const content = sorted
       .map((r) => {
         const name = isRelay ? r.ShortName : `${r.ShortName} (${r.Nat})`
-        const time = hasValidTime(r.TotalTime) ? r.TotalTime : 'DNF'
-        const rank = hasValidRank(r.Rank) ? r.Rank : '-'
-        return `${rank}. ${name} - ${time}`
+        return `${r.Bib}. ${name}`
       })
       .join('\n')
-    return { title: 'Results', content }
+    return { title: 'Start List', content }
   }
 
-  // Format as start list - sort by Bib number
-  const sorted = [...filtered].sort(
-    (a, b) => Number.parseInt(a.Bib, 10) - Number.parseInt(b.Bib, 10),
-  )
+  // Format as results - sort by ResultOrder, then StartOrder
+  const sorted = [...filtered].sort((a, b) => {
+    if (a.ResultOrder !== b.ResultOrder) {
+      return a.ResultOrder - b.ResultOrder
+    }
+    return a.StartOrder - b.StartOrder
+  })
 
   const content = sorted
     .map((r) => {
       const name = isRelay ? r.ShortName : `${r.ShortName} (${r.Nat})`
-      return `${r.Bib}. ${name}`
+      const time = r.TotalTime || 'DNF'
+      return `${r.Rank}. ${name} - ${time}`
     })
     .join('\n')
-  return { title: 'Start List', content }
+  return { title: 'Results', content }
 }
 
 function createAttendees(
@@ -196,9 +183,9 @@ function eventToIcsEvent(event: IBUEvent): IcsEvent {
 function competitionToIcsEvent(
   competition: IBUCompetition,
   event: IBUEvent,
-  competitionResults: IBUResult[] | undefined,
+  resultsData: IBUResultsData | undefined,
   allCompetitions: IBUCompetition[],
-  allResults: Map<string, IBUResult[]>,
+  allResults: Map<string, IBUResultsData>,
 ): IcsEvent {
   const isCompleted = competition.StatusId >= 10
   const emoji = isCompleted
@@ -215,10 +202,11 @@ function competitionToIcsEvent(
   }
 
   // Add start list or results if available
-  if (competitionResults && competitionResults.length > 0) {
+  if (resultsData && resultsData.results.length > 0) {
     const formatted = formatStartListOrResults(
-      competitionResults,
+      resultsData.results,
       competition.DisciplineId,
+      resultsData.isStartList,
     )
     if (formatted) {
       descriptionParts.push(`${formatted.title}:\n${formatted.content}`)
@@ -230,7 +218,7 @@ function competitionToIcsEvent(
   const startTime = new Date(competition.StartTime)
   const duration = estimateDuration(
     competition,
-    competitionResults,
+    resultsData?.results,
     allCompetitions,
     allResults,
   )
@@ -238,8 +226,8 @@ function competitionToIcsEvent(
 
   // Create attendees from participants
   const attendees =
-    competitionResults && competitionResults.length > 0
-      ? createAttendees(competitionResults, competition.DisciplineId)
+    resultsData && resultsData.results.length > 0
+      ? createAttendees(resultsData.results, competition.DisciplineId)
       : undefined
 
   return {
@@ -258,7 +246,7 @@ function competitionToIcsEvent(
 export function buildCalendar(
   events: IBUEvent[],
   competitions: Map<string, IBUCompetition[]>,
-  results: Map<string, IBUResult[]>,
+  results: Map<string, IBUResultsData>,
   params: IBUQueryParams,
 ): IcsCalendar {
   const icsEvents: IcsEvent[] = []
@@ -276,12 +264,12 @@ export function buildCalendar(
     if (params.includeComps) {
       const eventCompetitions = competitions.get(event.EventId) || []
       for (const competition of eventCompetitions) {
-        const competitionResults = results.get(competition.RaceId)
+        const resultsData = results.get(competition.RaceId)
         icsEvents.push(
           competitionToIcsEvent(
             competition,
             event,
-            competitionResults,
+            resultsData,
             allCompetitions,
             results,
           ),

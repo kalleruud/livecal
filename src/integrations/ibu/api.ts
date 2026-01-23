@@ -1,7 +1,7 @@
 import type {
   IBUCompetition,
   IBUEvent,
-  IBUResult,
+  IBUResultsData,
   IBUResultsResponse,
 } from './types.ts'
 
@@ -55,8 +55,8 @@ export async function fetchCompetitions(
 
 export async function fetchResults(
   competitions: Map<string, IBUCompetition[]>,
-): Promise<Map<string, IBUResult[]>> {
-  const map = new Map<string, IBUResult[]>()
+): Promise<Map<string, IBUResultsData>> {
+  const map = new Map<string, IBUResultsData>()
   const allCompetitions = [...competitions.values()].flat()
 
   // Fetch for competitions with start list or results (StatusId >= 2)
@@ -73,7 +73,10 @@ export async function fetchResults(
       }
       const data = (await response.json()) as IBUResultsResponse
       if (data.Results && data.Results.length > 0) {
-        map.set(competition.RaceId, data.Results)
+        map.set(competition.RaceId, {
+          isStartList: data.IsStartList,
+          results: data.Results,
+        })
       }
     }),
   )

@@ -59,10 +59,16 @@ export interface IBUResult {
 
 export interface IBUResultsResponse {
   RaceId: string
+  IsStartList: boolean
   IsResult: boolean
   Competition: IBUCompetition
   SportEvt: IBUEvent
   Results: IBUResult[]
+}
+
+export interface IBUResultsData {
+  isStartList: boolean
+  results: IBUResult[]
 }
 
 export interface IBUQueryParams {

@@ -5,7 +5,16 @@ import type {
   IBUCompetition,
   IBUEvent,
   IBUResult,
+  IBUResultsData,
 } from '../src/integrations/ibu/types.ts'
+
+// Helper to create results data
+function resultsData(
+  results: IBUResult[],
+  isStartList = false,
+): IBUResultsData {
+  return { isStartList, results }
+}
 
 // Mock data representing realistic IBU API responses
 const mockEvent: IBUEvent = {
@@ -210,8 +219,8 @@ describe('IBU Calendar Output', () => {
       [mockEvent.EventId, [mockSprintCompetition, mockRelayCompetition]],
     ])
     const results = new Map([
-      [mockSprintCompetition.RaceId, mockSprintResults],
-      [mockRelayCompetition.RaceId, mockRelayResults],
+      [mockSprintCompetition.RaceId, resultsData(mockSprintResults)],
+      [mockRelayCompetition.RaceId, resultsData(mockRelayResults)],
     ])
 
     const calendar = buildCalendar(events, competitions, results, {
@@ -244,7 +253,9 @@ describe('IBU Calendar Output', () => {
   test('includes competition details in description', () => {
     const events = [mockEvent]
     const competitions = new Map([[mockEvent.EventId, [mockSprintCompetition]]])
-    const results = new Map([[mockSprintCompetition.RaceId, mockSprintResults]])
+    const results = new Map([
+      [mockSprintCompetition.RaceId, resultsData(mockSprintResults)],
+    ])
 
     const calendar = buildCalendar(events, competitions, results, {
       includeEvents: false,
@@ -264,7 +275,9 @@ describe('IBU Calendar Output', () => {
   test('shows results for completed competitions', () => {
     const events = [mockEvent]
     const competitions = new Map([[mockEvent.EventId, [mockSprintCompetition]]])
-    const results = new Map([[mockSprintCompetition.RaceId, mockSprintResults]])
+    const results = new Map([
+      [mockSprintCompetition.RaceId, resultsData(mockSprintResults)],
+    ])
 
     const calendar = buildCalendar(events, competitions, results, {
       includeEvents: false,
@@ -289,7 +302,7 @@ describe('IBU Calendar Output', () => {
       [mockEvent.EventId, [scheduledCompWithStartList]],
     ])
     const results = new Map([
-      [scheduledCompWithStartList.RaceId, mockStartList],
+      [scheduledCompWithStartList.RaceId, resultsData(mockStartList, true)],
     ])
 
     const calendar = buildCalendar(events, competitions, results, {
@@ -308,9 +321,9 @@ describe('IBU Calendar Output', () => {
     expect(desc.indexOf('1. ECKHOFF')).toBeLessThan(desc.indexOf('5. SIMON'))
   })
 
-  test('treats "null" strings as start list (API quirk)', () => {
-    // Sometimes the API returns "null" as a string instead of actual null
-    const mockStartListWithNullStrings: IBUResult[] = [
+  test('uses API isStartList flag to format correctly', () => {
+    // The API provides an IsStartList flag that we use directly
+    const mockStartListEntries: IBUResult[] = [
       {
         StartOrder: 1,
         ResultOrder: 1,
@@ -319,10 +332,10 @@ describe('IBU Calendar Output', () => {
         Name: 'GIACOMEL Tommaso',
         ShortName: 'GIACOMEL T.',
         Nat: 'ITA',
-        Rank: 'null' as unknown as null, // API returns "null" string
+        Rank: null,
         Bib: '1',
         Shootings: '',
-        TotalTime: 'null' as unknown as null, // API returns "null" string
+        TotalTime: null,
         Behind: null,
       },
       {
@@ -333,10 +346,10 @@ describe('IBU Calendar Output', () => {
         Name: 'PERROT Eric',
         ShortName: 'PERROT E.',
         Nat: 'FRA',
-        Rank: 'null' as unknown as null,
+        Rank: null,
         Bib: '2',
         Shootings: '',
-        TotalTime: 'null' as unknown as null,
+        TotalTime: null,
         Behind: null,
       },
     ]
@@ -345,7 +358,7 @@ describe('IBU Calendar Output', () => {
     const events = [mockEvent]
     const competitions = new Map([[mockEvent.EventId, [scheduledComp]]])
     const results = new Map([
-      [scheduledComp.RaceId, mockStartListWithNullStrings],
+      [scheduledComp.RaceId, resultsData(mockStartListEntries, true)],
     ])
 
     const calendar = buildCalendar(events, competitions, results, {
@@ -354,19 +367,20 @@ describe('IBU Calendar Output', () => {
     })
 
     const event = calendar.events?.[0]
-    // Should be treated as start list, not results
+    // Should be treated as start list based on API flag
     expect(event?.description).toContain('Start List:')
     expect(event?.description).not.toContain('Results:')
-    // Should show bib numbers, not "null"
+    // Should show bib numbers
     expect(event?.description).toContain('1. GIACOMEL T. (ITA)')
     expect(event?.description).toContain('2. PERROT E. (FRA)')
-    expect(event?.description).not.toContain('null.')
   })
 
   test('filters relay results to show only team results', () => {
     const events = [mockEvent]
     const competitions = new Map([[mockEvent.EventId, [mockRelayCompetition]]])
-    const results = new Map([[mockRelayCompetition.RaceId, mockRelayResults]])
+    const results = new Map([
+      [mockRelayCompetition.RaceId, resultsData(mockRelayResults)],
+    ])
 
     const calendar = buildCalendar(events, competitions, results, {
       includeEvents: false,
@@ -404,7 +418,9 @@ describe('IBU Calendar Output', () => {
   test('adds attendees for participants', () => {
     const events = [mockEvent]
     const competitions = new Map([[mockEvent.EventId, [mockSprintCompetition]]])
-    const results = new Map([[mockSprintCompetition.RaceId, mockSprintResults]])
+    const results = new Map([
+      [mockSprintCompetition.RaceId, resultsData(mockSprintResults)],
+    ])
 
     const calendar = buildCalendar(events, competitions, results, {
       includeEvents: false,

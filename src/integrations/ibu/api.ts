@@ -1,8 +1,11 @@
-import type {
-  IBUCompetition,
-  IBUEvent,
-  IBUResultsData,
-  IBUResultsResponse,
+import request from '../../server/cache.ts'
+import { IBU_CONFIG } from './service.ts'
+import {
+  type IBUCompetition,
+  IBUCompetitionStatus,
+  type IBUEvent,
+  type IBUResultsData,
+  type IBUResultsResponse,
 } from './types.ts'
 
 const BASE_URL = 'https://bw.biathlonresults.com/modules/sportapi/api'
@@ -10,12 +13,14 @@ const BASE_URL = 'https://bw.biathlonresults.com/modules/sportapi/api'
 export async function fetchEvents(seasonIds: string[]): Promise<IBUEvent[]> {
   const results = await Promise.all(
     seasonIds.map(async (seasonId) => {
-      const response = await fetch(`${BASE_URL}/Events?SeasonId=${seasonId}`)
-      if (!response.ok) {
-        console.error(`Failed to fetch events for season ${seasonId}`)
+      try {
+        return await request<IBUEvent[]>(
+          `${BASE_URL}/Events?SeasonId=${seasonId}`,
+          IBU_CONFIG.id,
+        )
+      } catch {
         return []
       }
-      return response.json() as Promise<IBUEvent[]>
     }),
   )
   return results.flat()
@@ -29,24 +34,20 @@ export async function fetchCompetitions(
 
   await Promise.all(
     events.map(async (event) => {
-      const response = await fetch(
-        `${BASE_URL}/Competitions?EventId=${event.EventId}&Language=EN`,
-      )
-      if (!response.ok) {
-        console.error(`Failed to fetch competitions for event ${event.EventId}`)
-        map.set(event.EventId, [])
-        return
-      }
-      let competitions = (await response.json()) as IBUCompetition[]
-
-      if (gender) {
-        const catId = gender === 'M' ? 'SM' : 'SW'
-        competitions = competitions.filter(
-          (c) => c.catId === catId || c.catId === 'MX',
+      try {
+        let competitions = await request<IBUCompetition[]>(
+          `${BASE_URL}/Competitions?EventId=${event.EventId}&Language=EN`,
+          IBU_CONFIG.id,
         )
-      }
+        if (gender) {
+          const catId = gender === 'M' ? 'SM' : 'SW'
+          competitions = competitions.filter(
+            (c) => c.catId === catId || c.catId === 'MX',
+          )
+        }
 
-      map.set(event.EventId, competitions)
+        map.set(event.EventId, competitions)
+      } catch {}
     }),
   )
 
@@ -60,24 +61,24 @@ export async function fetchResults(
   const allCompetitions = [...competitions.values()].flat()
 
   // Fetch for competitions with start list or results (StatusId >= 2)
-  const competitionsWithData = allCompetitions.filter((c) => c.StatusId >= 2)
+  const competitionsWithData = allCompetitions.filter(
+    (c) => c.StatusId >= IBUCompetitionStatus.Started,
+  )
 
   await Promise.all(
     competitionsWithData.map(async (competition) => {
-      const response = await fetch(
-        `${BASE_URL}/Results?RaceId=${competition.RaceId}&Language=en`,
-      )
-      if (!response.ok) {
-        console.error(`Failed to fetch results for ${competition.RaceId}`)
-        return
-      }
-      const data = (await response.json()) as IBUResultsResponse
-      if (data.Results && data.Results.length > 0) {
-        map.set(competition.RaceId, {
-          isStartList: data.IsStartList,
-          results: data.Results,
-        })
-      }
+      try {
+        const data = await request<IBUResultsResponse>(
+          `${BASE_URL}/Results?RaceId=${competition.RaceId}&Language=en`,
+          IBU_CONFIG.id,
+        )
+        if (data.Results && data.Results.length > 0) {
+          map.set(competition.RaceId, {
+            isStartList: data.IsStartList,
+            results: data.Results,
+          })
+        }
+      } catch {}
     }),
   )
 

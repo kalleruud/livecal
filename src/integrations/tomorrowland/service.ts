@@ -11,7 +11,7 @@ import { fetchPerformances, fetchStages } from './api.ts'
 import { buildCalendar } from './calendar.ts'
 import type { TomorrowlandQueryParams, Weekend } from './types.ts'
 
-const config: IntegrationConfig = {
+export const config: IntegrationConfig = {
   id: 'tomorrowland',
   name: 'Tomorrowland',
   basePath: '/api/tomorrowland',

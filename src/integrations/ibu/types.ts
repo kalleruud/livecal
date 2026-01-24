@@ -21,12 +21,18 @@ export type DisciplineId = 'SP' | 'PU' | 'IN' | 'SI' | 'MS' | 'RL' | 'SR'
 
 export type StartMode = 'M' | 'I' | 'P' | 'H' // Mass, Interval, Pursuit, Handicap
 
+export enum IBUCompetitionStatus {
+  Scheduled = 1,
+  Started = 2,
+  Finished = 3,
+}
+
 export interface IBUCompetition {
   RaceId: string
   km: string
   catId: CategoryId
   DisciplineId: DisciplineId
-  StatusId: number
+  StatusId: IBUCompetitionStatus
   StatusText: string
   StartTime: string
   Description: string

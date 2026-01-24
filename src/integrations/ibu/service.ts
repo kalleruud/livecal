@@ -11,14 +11,14 @@ import { fetchCompetitions, fetchEvents, fetchResults } from './api.ts'
 import { buildCalendar } from './calendar.ts'
 import type { IBUQueryParams } from './types.ts'
 
-const config: IntegrationConfig = {
+export const IBU_CONFIG: IntegrationConfig = {
   id: 'ibu',
   name: 'IBU Biathlon World Cup',
   basePath: '/api/ibu',
 }
 
 export class IBUIntegration implements IntegrationService {
-  readonly config = config
+  readonly config = IBU_CONFIG
 
   async getCalendar(params: QueryParams): Promise<IcsCalendar> {
     const ibuParams = this.parseParams(params)

@@ -18,15 +18,27 @@ async function ensureCacheDir(): Promise<void> {
   await mkdir(cacheDir, { recursive: true })
 }
 
-export async function request<T>(url: URL, key: CacheKey): Promise<T> {
+/*
+ * Main request function with caching
+ */
+export default async function request<T extends object>(
+  url: string,
+  integrationId: string,
+): Promise<T> {
+  const key: CacheKey = `${integrationId}-${url.toString()}`
+
   const cachedContent = await get(key)
   if (cachedContent && hasValidCache(key)) {
+    console.log(`Cache hit for ${url}`)
     return JSON.parse(cachedContent)
   }
 
+  console.log(`Cache miss for ${url}, fetching...`)
   const response = await fetch(url)
   if (response.ok) {
-    return JSON.parse(await response.text())
+    await set(key, await response.text())
+    console.log(`Fetched and cached ${url}`)
+    return (await response.json()) as T
   }
 
   if (cachedContent) {
@@ -57,14 +69,13 @@ async function get(key: CacheKey): Promise<string | null> {
  * Retrieve content from cache
  */
 function hasValidCache(key: CacheKey): boolean {
-  const cached = cache.get(key)
-  return cached?.isValid === true
+  return cache.get(key)?.isValid === true
 }
 
 /*
  * Store content in cache
  */
-export async function set(key: CacheKey, content: string): Promise<void> {
+async function set(key: CacheKey, content: string): Promise<void> {
   await ensureCacheDir()
   const path = join(cacheDir, key)
   cache.set(key, { isValid: true, path })
@@ -87,5 +98,6 @@ export async function clear(): Promise<void> {
   await ensureCacheDir()
   const files = await readdir(cacheDir)
   await Promise.all(files.map((file) => unlink(join(cacheDir, file))))
+  cache.clear()
   console.log(`Cache cleared: ${files.length} files removed`)
 }

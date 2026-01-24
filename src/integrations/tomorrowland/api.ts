@@ -1,3 +1,5 @@
+import request from '../../server/cache.ts'
+import { config } from './service.ts'
 import type {
   TomorrowlandApiResponse,
   TomorrowlandPerformance,
@@ -15,16 +17,13 @@ export async function fetchPerformances(
   const url = `${BASE_URL}/TL26BE-${weekend}-${API_TOKEN}.json`
 
   try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      console.error(`Failed to fetch Tomorrowland ${weekend} lineup`)
-      return []
-    }
-
-    const data = (await response.json()) as TomorrowlandApiResponse
-    return data.performances || []
+    const response = await request<TomorrowlandApiResponse>(
+      url,
+      `${config.id}-fetchPerformances-${weekend}`,
+    )
+    return response.performances
   } catch (error) {
-    console.error(`Error fetching performances for ${weekend}:`, error)
+    console.error(error)
     return []
   }
 }
@@ -33,16 +32,13 @@ export async function fetchStages(): Promise<TomorrowlandStageInfo[]> {
   const url = `${BASE_URL}/stages-TL26BE-${API_TOKEN}.json`
 
   try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      console.error('Failed to fetch Tomorrowland stages')
-      return []
-    }
-
-    const data = (await response.json()) as TomorrowlandStagesResponse
-    return data.stages || []
+    const response = await request<TomorrowlandStagesResponse>(
+      url,
+      `${config.id}-fetchStages`,
+    )
+    return response.stages
   } catch (error) {
-    console.error('Error fetching stages:', error)
+    console.error(error)
     return []
   }
 }

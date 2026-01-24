@@ -407,8 +407,15 @@
             // Fetch options when dependency changes
             if (param.dependsOn) {
               setTimeout(() => {
-                const dependencyField = endpoint.querySelector(`[name="${param.dependsOn}"]`);
+                const dependencyField = endpoint.querySelector(
+                  `[name="${param.dependsOn}"]`,
+                );
                 if (dependencyField) {
+                  // Fetch initially if dependency has a value
+                  if (dependencyField.value) {
+                    fetchOptions();
+                  }
+
                   dependencyField.addEventListener('change', () => {
                     selectedValues.clear();
                     hiddenInput.value = '';

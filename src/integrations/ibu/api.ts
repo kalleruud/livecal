@@ -62,7 +62,7 @@ export async function fetchResults(
 
   // Fetch for competitions with start list or results (StatusId >= 2)
   const competitionsWithData = allCompetitions.filter(
-    (c) => c.StatusId >= IBUCompetitionStatus.Started,
+    (c) => c.StatusId >= IBUCompetitionStatus.ProvStartList,
   )
 
   await Promise.all(

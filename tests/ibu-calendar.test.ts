@@ -243,7 +243,7 @@ describe('IBU Calendar Output', () => {
     // Verify completed sprint competition
     expect(ics).toContain('UID:BT2526SWRLCP01SWSP')
     expect(ics).toContain('SUMMARY:✅ Women 7.5km Sprint')
-    expect(ics).toContain('LOCATION:Kontiolahti\\, Kontiolahti')
+    expect(ics).toContain(String.raw`LOCATION:Kontiolahti\, Kontiolahti`)
 
     // Verify completed relay competition
     expect(ics).toContain('UID:BT2526SWRLCP01SWRL')

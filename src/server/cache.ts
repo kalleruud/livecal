@@ -76,8 +76,12 @@ function hasValidCache(key: CacheKey): boolean {
  * Store content in cache
  */
 async function set(key: CacheKey, content: string): Promise<void> {
+  const invalidPathCaracters = /[<>:"/\\|?*]/g
   await ensureCacheDir()
-  const path = join(cacheDir, key)
+  const path = join(
+    cacheDir,
+    `${key.replaceAll(invalidPathCaracters, '_')}.json`,
+  )
   cache.set(key, { isValid: true, path })
   await Bun.write(path, content)
 }

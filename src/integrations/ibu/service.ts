@@ -75,13 +75,6 @@ export class IBUIntegration implements IntegrationService {
     return null
   }
 
-  getCacheKey(params: QueryParams): string {
-    const parsed = this.parseParams(params)
-    const season = parsed.season || 'all'
-    const gender = parsed.gender || 'both'
-    return `ibu-wc-${season}-${gender}.ics`
-  }
-
   private parseParams(query: QueryParams): IBUQueryParams {
     return {
       season: query.season as string | undefined,

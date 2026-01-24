@@ -23,5 +23,4 @@ export interface IntegrationService {
   getCalendar(params: QueryParams): Promise<IcsCalendar>
   getRoutes(): Route[]
   validateParams(params: QueryParams): string | null
-  getCacheKey(params: QueryParams): string
 }

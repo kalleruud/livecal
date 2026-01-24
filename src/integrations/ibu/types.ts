@@ -23,8 +23,9 @@ export type StartMode = 'M' | 'I' | 'P' | 'H' // Mass, Interval, Pursuit, Handic
 
 export enum IBUCompetitionStatus {
   Scheduled = 1,
-  Started = 2,
-  Finished = 3,
+  ProvStartList = 2,
+  StartList = 3,
+  Final = 11,
 }
 
 export interface IBUCompetition {

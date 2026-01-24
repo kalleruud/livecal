@@ -1,3 +1,5 @@
+import type { IntegrationService } from '../integrations/interface.ts'
+
 export interface Route {
   path: string
   handler: (req: Request) => Response | Promise<Response>
@@ -10,8 +12,13 @@ const routes: Route[] = [
   },
 ]
 
-export function addRoute(route: Route): void {
+const routeToIntegration = new Map<string, IntegrationService>()
+
+export function addRoute(route: Route, integration?: IntegrationService): void {
   routes.push(route)
+  if (integration) {
+    routeToIntegration.set(route.path, integration)
+  }
 }
 
 function getCalendarRoutes(): string[] {
@@ -35,9 +42,14 @@ async function renderEndpoints(host: string): Promise<string> {
   return calendarRoutes
     .map((path) => {
       const webcalUrl = `webcal://${host}${path}`
+      const integration = routeToIntegration.get(path)
+      const params = integration?.getParamMetadata() || []
+      const paramsJson = JSON.stringify(params)
+
       return endpointTemplate
         .replaceAll('{{PATH}}', path)
         .replaceAll('{{WEBCAL_URL}}', webcalUrl)
+        .replaceAll('{{PARAMS_JSON}}', paramsJson)
     })
     .join('\n    ')
 }

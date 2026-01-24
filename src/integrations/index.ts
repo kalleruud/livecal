@@ -7,6 +7,8 @@ export const integrations: IntegrationService[] = [
   new TomorrowlandIntegration(),
 ]
 
-export function getAllRoutes(): Route[] {
-  return integrations.flatMap((integration) => integration.getRoutes())
+export function getAllRoutes(): Array<{ route: Route; integration: IntegrationService }> {
+  return integrations.flatMap((integration) =>
+    integration.getRoutes().map((route) => ({ route, integration }))
+  )
 }

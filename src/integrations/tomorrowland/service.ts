@@ -3,6 +3,7 @@ import { generateIcsCalendar } from 'ts-ics'
 import type {
   IntegrationConfig,
   IntegrationService,
+  ParamMetadata,
   QueryParams,
   Route,
 } from '../interface.ts'
@@ -51,6 +52,35 @@ export class TomorrowlandIntegration implements IntegrationService {
             headers: { 'Content-Type': 'text/calendar; charset=utf-8' },
           })
         },
+      },
+    ]
+  }
+
+  getParamMetadata(): ParamMetadata[] {
+    return [
+      {
+        name: 'weekend',
+        label: 'Weekend',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'W1', label: 'Weekend 1' },
+          { value: 'W2', label: 'Weekend 2' },
+        ],
+      },
+      {
+        name: 'artist',
+        label: 'Artists',
+        type: 'comma-separated',
+        placeholder: 'e.g. Armin van Buuren, David Guetta',
+        description: 'Filter by artist names (comma-separated)',
+      },
+      {
+        name: 'stage',
+        label: 'Stages',
+        type: 'comma-separated',
+        placeholder: 'e.g. MainStage, Freedom',
+        description: 'Filter by stage names (comma-separated)',
       },
     ]
   }

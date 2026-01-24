@@ -3,8 +3,8 @@ import * as cache from './server/cache.ts'
 import { addRoute, handleRequest } from './server/router.ts'
 import * as scheduler from './server/scheduler.ts'
 
-for (const route of getAllRoutes()) {
-  addRoute(route)
+for (const { route, integration } of getAllRoutes()) {
+  addRoute(route, integration)
 }
 
 scheduler.start(async () => {

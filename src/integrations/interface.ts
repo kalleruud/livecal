@@ -18,9 +18,28 @@ export interface Route {
   handler: RouteHandler
 }
 
+export type ParamInputType = 'text' | 'select' | 'checkbox' | 'comma-separated'
+
+export interface ParamOption {
+  value: string
+  label: string
+}
+
+export interface ParamMetadata {
+  name: string
+  label: string
+  type: ParamInputType
+  required?: boolean
+  defaultValue?: string | boolean
+  placeholder?: string
+  options?: ParamOption[]
+  description?: string
+}
+
 export interface IntegrationService {
   readonly config: IntegrationConfig
   getCalendar(params: QueryParams): Promise<IcsCalendar>
   getRoutes(): Route[]
+  getParamMetadata(): ParamMetadata[]
   validateParams(params: QueryParams): string | null
 }

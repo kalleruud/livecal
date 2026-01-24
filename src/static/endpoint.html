@@ -1,32 +1,9 @@
-<li class="endpoint" data-path="{{PATH}}">
+<li class="endpoint" data-path="{{PATH}}" data-params='{{PARAMS_JSON}}'>
   <div class="endpoint-header">
     <code>{{PATH}}</code>
     <a href="{{WEBCAL_URL}}" class="subscribe-link">Subscribe</a>
   </div>
   <div class="params">
-    <div class="param">
-      <label>Season</label>
-      <input type="text" name="season" placeholder="e.g. 2526">
-    </div>
-    <div class="param">
-      <label>Gender</label>
-      <select name="gender">
-        <option value="">All</option>
-        <option value="M">Men</option>
-        <option value="W">Women</option>
-      </select>
-    </div>
-    <div class="param">
-      <label>
-        <input type="checkbox" name="includeEvents" data-default="false">
-        Include Events
-      </label>
-    </div>
-    <div class="param">
-      <label>
-        <input type="checkbox" name="includeComps" data-default="true" checked>
-        Include Competitions
-      </label>
-    </div>
+    <!-- Dynamically populated by JavaScript -->
   </div>
 </li>

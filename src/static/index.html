@@ -80,8 +80,70 @@
   <script>
     document.querySelectorAll('.endpoint').forEach(endpoint => {
       const basePath = endpoint.dataset.path;
+      const paramsJson = endpoint.dataset.params;
+      const paramsContainer = endpoint.querySelector('.params');
       const link = endpoint.querySelector('.subscribe-link');
       const code = endpoint.querySelector('code');
+
+      // Parse parameter metadata
+      const paramMetadata = paramsJson ? JSON.parse(paramsJson) : [];
+
+      // Render input fields based on metadata
+      paramMetadata.forEach(param => {
+        const paramDiv = document.createElement('div');
+        paramDiv.className = 'param';
+
+        switch (param.type) {
+          case 'text':
+          case 'comma-separated': {
+            const label = document.createElement('label');
+            label.textContent = param.label;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = param.name;
+            input.placeholder = param.placeholder || '';
+            if (param.description) input.title = param.description;
+            paramDiv.appendChild(label);
+            paramDiv.appendChild(input);
+            break;
+          }
+
+          case 'select': {
+            const selectLabel = document.createElement('label');
+            selectLabel.textContent = param.label;
+            const select = document.createElement('select');
+            select.name = param.name;
+            param.options?.forEach(opt => {
+              const option = document.createElement('option');
+              option.value = opt.value;
+              option.textContent = opt.label;
+              if (opt.value === param.defaultValue) option.selected = true;
+              select.appendChild(option);
+            });
+            if (param.description) select.title = param.description;
+            paramDiv.appendChild(selectLabel);
+            paramDiv.appendChild(select);
+            break;
+          }
+
+          case 'checkbox': {
+            const checkLabel = document.createElement('label');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = param.name;
+            checkbox.checked = param.defaultValue === true;
+            checkbox.dataset.default = String(param.defaultValue);
+            checkLabel.appendChild(checkbox);
+            checkLabel.appendChild(document.createTextNode(` ${param.label}`));
+            if (param.description) checkLabel.title = param.description;
+            paramDiv.appendChild(checkLabel);
+            break;
+          }
+        }
+
+        paramsContainer.appendChild(paramDiv);
+      });
+
       const inputs = endpoint.querySelectorAll('select, input');
 
       function updateUrl() {
@@ -104,7 +166,10 @@
         code.textContent = fullPath;
       }
 
-      inputs.forEach(input => { input.addEventListener('change', updateUrl); });
+      inputs.forEach(input => {
+        input.addEventListener('change', updateUrl);
+        input.addEventListener('input', updateUrl);
+      });
       updateUrl();
     });
   </script>

@@ -3,6 +3,7 @@ import { generateIcsCalendar } from 'ts-ics'
 import type {
   IntegrationConfig,
   IntegrationService,
+  ParamMetadata,
   QueryParams,
   Route,
 } from '../interface.ts'
@@ -57,6 +58,40 @@ export class IBUIntegration implements IntegrationService {
             headers: { 'Content-Type': 'text/calendar; charset=utf-8' },
           })
         },
+      },
+    ]
+  }
+
+  getParamMetadata(): ParamMetadata[] {
+    return [
+      {
+        name: 'season',
+        label: 'Season',
+        type: 'text',
+        placeholder: 'e.g. 2526',
+        description: 'Biathlon season (YXYY format)',
+      },
+      {
+        name: 'gender',
+        label: 'Gender',
+        type: 'select',
+        options: [
+          { value: '', label: 'All' },
+          { value: 'M', label: 'Men' },
+          { value: 'W', label: 'Women' },
+        ],
+      },
+      {
+        name: 'includeEvents',
+        label: 'Include Events',
+        type: 'checkbox',
+        defaultValue: false,
+      },
+      {
+        name: 'includeComps',
+        label: 'Include Competitions',
+        type: 'checkbox',
+        defaultValue: true,
       },
     ]
   }

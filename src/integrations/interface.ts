@@ -18,7 +18,12 @@ export interface Route {
   handler: RouteHandler
 }
 
-export type ParamInputType = 'text' | 'select' | 'checkbox' | 'comma-separated'
+export type ParamInputType =
+  | 'text'
+  | 'select'
+  | 'checkbox'
+  | 'comma-separated'
+  | 'multi-select-dynamic'
 
 export interface ParamOption {
   value: string
@@ -34,6 +39,8 @@ export interface ParamMetadata {
   placeholder?: string
   options?: ParamOption[]
   description?: string
+  optionsEndpoint?: string
+  dependsOn?: string
 }
 
 export interface IntegrationService {

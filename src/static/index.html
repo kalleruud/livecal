@@ -69,6 +69,100 @@
     input[type="checkbox"] {
       accent-color: #66b3ff;
     }
+    .multi-select-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      flex: 1;
+    }
+    .multi-select-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      min-height: 1.5rem;
+      align-items: center;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 0.25rem 0.5rem;
+      cursor: text;
+    }
+    .multi-select-chips.focused {
+      border-color: #66b3ff;
+    }
+    .chip {
+      background: #66b3ff;
+      color: #121212;
+      padding: 0.25rem 0.5rem;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+    }
+    .chip-close {
+      cursor: pointer;
+      font-weight: bold;
+      opacity: 0.7;
+    }
+    .chip-close:hover {
+      opacity: 1;
+    }
+    .multi-select-input {
+      background: transparent;
+      border: none;
+      color: #e0e0e0;
+      font-size: 0.85rem;
+      outline: none;
+      flex: 1;
+      min-width: 100px;
+      padding: 0;
+    }
+    .multi-select-dropdown {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 4px;
+      max-height: 150px;
+      overflow-y: auto;
+      position: absolute;
+      width: 100%;
+      z-index: 10;
+      margin-top: 0.25rem;
+    }
+    .multi-select-option {
+      padding: 0.5rem;
+      cursor: pointer;
+      color: #e0e0e0;
+      font-size: 0.85rem;
+    }
+    .multi-select-option:hover {
+      background: #333;
+    }
+    .multi-select-option.selected {
+      background: #66b3ff;
+      color: #121212;
+    }
+    .multi-select-loading {
+      padding: 0.5rem;
+      color: #888;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+    .multi-select-error {
+      padding: 0.5rem;
+      color: #ff6b6b;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+    .multi-select-empty {
+      padding: 0.5rem;
+      color: #888;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+    .param-relative {
+      position: relative;
+    }
   </style>
 </head>
 <body>
@@ -89,6 +183,8 @@
       const paramMetadata = paramsJson ? JSON.parse(paramsJson) : [];
 
       // Render input fields based on metadata
+      const multiSelectInstances = new Map();
+
       paramMetadata.forEach(param => {
         const paramDiv = document.createElement('div');
         paramDiv.className = 'param';
@@ -137,6 +233,200 @@
             checkLabel.appendChild(document.createTextNode(` ${param.label}`));
             if (param.description) checkLabel.title = param.description;
             paramDiv.appendChild(checkLabel);
+            break;
+          }
+
+          case 'multi-select-dynamic': {
+            paramDiv.className = 'param param-relative';
+            const label = document.createElement('label');
+            label.textContent = param.label;
+
+            const container = document.createElement('div');
+            container.className = 'multi-select-container';
+
+            const chipsContainer = document.createElement('div');
+            chipsContainer.className = 'multi-select-chips';
+
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = param.name;
+
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.className = 'multi-select-input';
+            searchInput.placeholder = param.placeholder || 'Search...';
+            if (param.description) searchInput.title = param.description;
+
+            const dropdown = document.createElement('div');
+            dropdown.className = 'multi-select-dropdown';
+            dropdown.style.display = 'none';
+
+            const selectedValues = new Set();
+            let allOptions = [];
+            let lastDependencyValue = null;
+
+            // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
+            async function fetchOptions() {
+              const dependencyField = param.dependsOn
+                ? Array.from(inputs).find(i => i.name === param.dependsOn)
+                : null;
+
+              const dependencyValue = dependencyField ? dependencyField.value : null;
+
+              // Only refetch if dependency changed
+              if (dependencyValue === lastDependencyValue && allOptions.length > 0) {
+                return;
+              }
+
+              if (!dependencyValue) {
+                dropdown.innerHTML = `<div class="multi-select-empty">Select ${param.dependsOn || 'a filter'} first</div>`;
+                allOptions = [];
+                return;
+              }
+
+              lastDependencyValue = dependencyValue;
+              dropdown.innerHTML = '<div class="multi-select-loading">Loading...</div>';
+
+              try {
+                const endpoint = `${param.optionsEndpoint}&${param.dependsOn}=${encodeURIComponent(dependencyValue)}`;
+                const response = await fetch(endpoint);
+
+                if (!response.ok) {
+                  throw new Error('Failed to fetch options');
+                }
+
+                const data = await response.json();
+                allOptions = data.options || [];
+
+                // Clear selections when dependency changes
+                selectedValues.clear();
+                hiddenInput.value = '';
+                renderChips();
+                updateUrl();
+
+                renderDropdown('');
+              } catch (_error) {
+                dropdown.innerHTML = '<div class="multi-select-error">Error loading options</div>';
+                allOptions = [];
+              }
+            }
+
+            // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
+            function filterOptions(searchTerm) {
+              const term = searchTerm.toLowerCase();
+              return allOptions.filter(opt =>
+                opt.label.toLowerCase().includes(term)
+              );
+            }
+
+            // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
+            function renderDropdown(searchTerm) {
+              const filtered = filterOptions(searchTerm);
+              dropdown.innerHTML = '';
+
+              if (filtered.length === 0) {
+                dropdown.innerHTML = '<div class="multi-select-empty">No options found</div>';
+              } else {
+                filtered.forEach(opt => {
+                  const optionEl = document.createElement('div');
+                  optionEl.className = 'multi-select-option';
+                  if (selectedValues.has(opt.value)) {
+                    optionEl.classList.add('selected');
+                  }
+                  optionEl.textContent = opt.label;
+                  optionEl.addEventListener('click', () => {
+                    if (selectedValues.has(opt.value)) {
+                      selectedValues.delete(opt.value);
+                    } else {
+                      selectedValues.add(opt.value);
+                    }
+                    hiddenInput.value = Array.from(selectedValues).join(',');
+                    renderChips();
+                    renderDropdown(searchInput.value);
+                    updateUrl();
+                  });
+                  dropdown.appendChild(optionEl);
+                });
+              }
+            }
+
+            // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
+            function renderChips() {
+              const chipsContent = Array.from(selectedValues).map(value => {
+                const chipEl = document.createElement('div');
+                chipEl.className = 'chip';
+                chipEl.innerHTML = `${value}<span class="chip-close">×</span>`;
+                chipEl.querySelector('.chip-close').addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  selectedValues.delete(value);
+                  hiddenInput.value = Array.from(selectedValues).join(',');
+                  renderChips();
+                  renderDropdown(searchInput.value);
+                  updateUrl();
+                });
+                return chipEl;
+              });
+
+              // Rebuild chipsContainer
+              while (chipsContainer.firstChild) {
+                chipsContainer.removeChild(chipsContainer.firstChild);
+              }
+              for (const chip of chipsContent) {
+                chipsContainer.appendChild(chip);
+              }
+              chipsContainer.appendChild(searchInput);
+            }
+
+            chipsContainer.addEventListener('click', () => {
+              searchInput.focus();
+            });
+
+            searchInput.addEventListener('focus', async () => {
+              await fetchOptions();
+              dropdown.style.display = 'block';
+              chipsContainer.classList.add('focused');
+            });
+
+            searchInput.addEventListener('blur', () => {
+              setTimeout(() => {
+                dropdown.style.display = 'none';
+                chipsContainer.classList.remove('focused');
+                searchInput.value = '';
+                renderDropdown('');
+              }, 200);
+            });
+
+            searchInput.addEventListener('input', (e) => {
+              renderDropdown(e.target.value);
+            });
+
+            // Fetch options when dependency changes
+            if (param.dependsOn) {
+              const dependencyField = Array.from(inputs).find(i => i.name === param.dependsOn);
+              if (dependencyField) {
+                dependencyField.addEventListener('change', () => {
+                  selectedValues.clear();
+                  hiddenInput.value = '';
+                  renderChips();
+                  updateUrl();
+                  fetchOptions();
+                });
+              }
+            }
+
+            container.appendChild(chipsContainer);
+            container.appendChild(dropdown);
+
+            paramDiv.appendChild(label);
+            paramDiv.appendChild(container);
+            paramDiv.appendChild(hiddenInput);
+
+            multiSelectInstances.set(param.name, {
+              fetchOptions,
+              selectedValues,
+              hiddenInput
+            });
+
             break;
           }
         }

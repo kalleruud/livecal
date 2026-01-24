@@ -34,6 +34,7 @@ Each integration lives in its own folder under `src/integrations/` with its own 
 | Integration | Endpoint | Documentation |
 | ----------- | -------- | ------------- |
 | IBU Biathlon World Cup | `/api/ibu/wc.ics` | [src/integrations/ibu/README.md](src/integrations/ibu/README.md) |
+| Tomorrowland | `/api/tomorrowland/lineup.ics` | [src/integrations/tomorrowland/README.md](src/integrations/tomorrowland/README.md) |
 
 See [Adding a New Integration](#adding-a-new-integration) for how to create new integrations.
 
@@ -58,18 +59,27 @@ livecal/
 │   │   ├── index.ts                # Integration registry
 │   │   ├── interface.ts            # IntegrationService interface
 │   │   │
-│   │   └── ibu/                    # IBU Biathlon integration
+│   │   ├── ibu/                    # IBU Biathlon integration
+│   │   │   ├── README.md           # Integration documentation
+│   │   │   ├── types.ts            # API response types
+│   │   │   ├── service.ts          # IntegrationService implementation
+│   │   │   ├── api.ts              # External API client
+│   │   │   ├── calendar.ts         # ICS calendar builder
+│   │   │   └── duration.ts         # Event duration estimation
+│   │   │
+│   │   └── tomorrowland/           # Tomorrowland integration
 │   │       ├── README.md           # Integration documentation
 │   │       ├── types.ts            # API response types
 │   │       ├── service.ts          # IntegrationService implementation
 │   │       ├── api.ts              # External API client
-│   │       ├── calendar.ts         # ICS calendar builder
-│   │       └── duration.ts         # Event duration estimation
+│   │       └── calendar.ts         # ICS calendar builder
 │   │
 │   └── static/                     # Static files (homepage, etc.)
 │
 └── tests/
-    └── ibu-calendar.test.ts        # Calendar output tests
+    ├── ibu-calendar.test.ts        # IBU calendar output tests
+    ├── tomorrowland-calendar.test.ts # Tomorrowland calendar output tests
+    └── tomorrowland-options.test.ts  # Tomorrowland options endpoint tests
 ```
 
 ## Integration Interface

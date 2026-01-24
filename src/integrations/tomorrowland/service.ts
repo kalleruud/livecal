@@ -4,6 +4,7 @@ import type {
   IntegrationConfig,
   IntegrationService,
   ParamMetadata,
+  ParamOption,
   QueryParams,
   Route,
 } from '../interface.ts'
@@ -53,6 +54,43 @@ export class TomorrowlandIntegration implements IntegrationService {
           })
         },
       },
+      {
+        path: `${this.config.basePath}/options`,
+        handler: async (req: Request) => {
+          const url = new URL(req.url)
+          const type = url.searchParams.get('type') as
+            | 'artists'
+            | 'stages'
+            | null
+          const weekend = url.searchParams.get('weekend') as Weekend | null
+
+          if (!type) {
+            return new Response('Missing required parameter: type', {
+              status: 400,
+            })
+          }
+
+          if (!weekend) {
+            return new Response('Missing required parameter: weekend', {
+              status: 400,
+            })
+          }
+
+          if (!['W1', 'W2'].includes(weekend)) {
+            return new Response(
+              "Invalid weekend parameter: must be 'W1' or 'W2'",
+              { status: 400 },
+            )
+          }
+
+          const options =
+            type === 'artists'
+              ? await this.extractArtistOptions(weekend)
+              : await this.extractStageOptions()
+
+          return Response.json({ options })
+        },
+      },
     ]
   }
 
@@ -71,16 +109,20 @@ export class TomorrowlandIntegration implements IntegrationService {
       {
         name: 'artist',
         label: 'Artists',
-        type: 'comma-separated',
-        placeholder: 'e.g. Armin van Buuren, David Guetta',
-        description: 'Filter by artist names (comma-separated)',
+        type: 'multi-select-dynamic',
+        optionsEndpoint: '/api/tomorrowland/options?type=artists',
+        dependsOn: 'weekend',
+        placeholder: 'Search and select artists...',
+        description: 'Filter by artist names',
       },
       {
         name: 'stage',
         label: 'Stages',
-        type: 'comma-separated',
-        placeholder: 'e.g. MainStage, Freedom',
-        description: 'Filter by stage names (comma-separated)',
+        type: 'multi-select-dynamic',
+        optionsEndpoint: '/api/tomorrowland/options?type=stages',
+        dependsOn: 'weekend',
+        placeholder: 'Search and select stages...',
+        description: 'Filter by stage names',
       },
     ]
   }
@@ -127,5 +169,35 @@ export class TomorrowlandIntegration implements IntegrationService {
       artists: artists && artists.length > 0 ? artists : undefined,
       stages: stages && stages.length > 0 ? stages : undefined,
     }
+  }
+
+  private async extractArtistOptions(weekend: Weekend): Promise<ParamOption[]> {
+    const performances = await fetchPerformances(weekend)
+    const artistNames = new Set<string>()
+
+    performances.forEach((perf) => {
+      perf.artists.forEach((artist) => {
+        artistNames.add(artist.name)
+      })
+    })
+
+    return Array.from(artistNames)
+      .sort((a, b) =>
+        a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }),
+      )
+      .map((name) => ({ value: name, label: name }))
+  }
+
+  private async extractStageOptions(): Promise<ParamOption[]> {
+    const stages = await fetchStages()
+
+    return stages
+      .map((stage) => ({ value: stage.name, label: stage.name }))
+      .sort((a, b) =>
+        a.label.localeCompare(b.label, undefined, {
+          numeric: true,
+          sensitivity: 'base',
+        }),
+      )
   }
 }

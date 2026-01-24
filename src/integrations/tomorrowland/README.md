@@ -2,19 +2,47 @@
 
 Calendar integration for [Tomorrowland](https://www.tomorrowland.com/) festival performances.
 
-## Endpoint
+## Endpoints
+
+### Main Endpoint
 
 ```
 GET /api/tomorrowland/lineup.ics
+```
+
+### Options Endpoint
+
+```
+GET /api/tomorrowland/options?type={type}&weekend={weekend}
+```
+
+Returns available artists and stages for a given weekend to populate multi-select dropdowns.
+
+**Query Parameters:**
+- `type` (required): `artists` or `stages`
+- `weekend` (required): `W1` or `W2`
+
+**Response:**
+```json
+{
+  "options": [
+    { "value": "Artist Name", "label": "Artist Name" },
+    ...
+  ]
+}
 ```
 
 ## Parameters
 
 | Parameter | Required | Values | Description |
 | --------- | -------- | ------ | ----------- |
-| `weekend` | No | `W1`, `W2` | Festival weekend (W1 = Weekend 1, W2 = Weekend 2) |
-| `artist` | No | comma separated string | Filter by artist names (case-insensitive partial match) |
-| `stage` | No | comma separated string | Filter by stage names (case-insensitive partial match) |
+| `weekend` | Yes | `W1`, `W2` | Festival weekend (W1 = Weekend 1, W2 = Weekend 2) |
+| `artist` | No | comma separated string | Filter by artist names (comma-separated, case-insensitive match) |
+| `stage` | No | comma separated string | Filter by stage names (comma-separated, case-insensitive match) |
+
+### Web UI
+
+The web interface provides searchable multi-select dropdowns for artists and stages, populated dynamically based on the selected weekend. Options are fetched from the `/api/tomorrowland/options` endpoint when a weekend is selected, and selections are automatically updated in the subscription URL.
 
 ## Calendar Events
 

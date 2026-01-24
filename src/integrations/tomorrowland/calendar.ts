@@ -12,6 +12,13 @@ function parseDateTime(dateTimeStr: string): Date {
   return new Date(isoStr)
 }
 
+function isUnpublishedTime(startTime: string, endTime: string): boolean {
+  // Times of 12:00-12:01 indicate the performance time hasn't been published yet
+  const startMatch = startTime.match(/12:00:00/)
+  const endMatch = endTime.match(/12:01:00/)
+  return !!(startMatch && endMatch)
+}
+
 function performanceToIcsEvent(
   performance: TomorrowlandPerformance,
   stageHost?: string,
@@ -23,6 +30,24 @@ function performanceToIcsEvent(
   const descriptionParts = [`Artists: ${artistNames}`]
   if (stageHost) {
     descriptionParts.push(`Stage: ${stageHost}`)
+  }
+
+  // Check if time is unpublished (12:00-12:01 indicator)
+  if (isUnpublishedTime(performance.startTime, performance.endTime)) {
+    // Create all-day event by using date-only format
+    // For all-day events, end date should be the day after (exclusive)
+    const endDateNextDay = new Date(startTime)
+    endDateNextDay.setDate(endDateNextDay.getDate() + 1)
+
+    return {
+      uid: performance.id,
+      stamp: { date: new Date() },
+      start: { type: 'DATE', date: startTime },
+      end: { type: 'DATE', date: endDateNextDay },
+      summary: `🎵 ${performance.name}`,
+      description: descriptionParts.join('\n'),
+      location: performance.stage.name,
+    }
   }
 
   return {

@@ -360,4 +360,42 @@ describe('Tomorrowland Calendar Output', () => {
     const uniqueUids = new Set(uids)
     expect(uniqueUids.size).toBe(uids.length)
   })
+
+  test('converts unpublished times (12:00-12:01) to all-day events', () => {
+    const unpublishedPerformance: TomorrowlandPerformance = {
+      id: '2658072654',
+      name: 'Mystery Artist',
+      artists: [
+        {
+          id: '1358428588',
+          name: 'Mystery Artist',
+          image: 'https://artist-lineup-cdn.tomorrowland.com/mystery.jpg',
+        },
+      ],
+      stage: {
+        id: '2643200378',
+        name: 'MAINSTAGE',
+      },
+      date: '2026-07-20',
+      day: 'MONDAY',
+      startTime: '2026-07-20 12:00:00+02:00',
+      endTime: '2026-07-20 12:01:00+02:00',
+    }
+
+    const calendar = buildCalendar(
+      [unpublishedPerformance],
+      { weekend: 'W1' },
+      mockStages,
+    )
+
+    const event = calendar.events?.[0]
+    expect(event).toBeDefined()
+    expect(event?.start).toEqual(expect.objectContaining({ type: 'DATE' }))
+    expect(event?.end).toEqual(expect.objectContaining({ type: 'DATE' }))
+
+    // Verify the ICS string representation
+    const ics = generateIcsCalendar(calendar)
+    expect(ics).toContain('DTSTART;VALUE=DATE')
+    expect(ics).toContain('DTEND;VALUE=DATE')
+  })
 })

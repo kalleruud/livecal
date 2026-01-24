@@ -269,7 +269,7 @@
             // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
             async function fetchOptions() {
               const dependencyField = param.dependsOn
-                ? Array.from(inputs).find(i => i.name === param.dependsOn)
+                ? endpoint.querySelector(`[name="${param.dependsOn}"]`)
                 : null;
 
               const dependencyValue = dependencyField ? dependencyField.value : null;
@@ -403,16 +403,18 @@
 
             // Fetch options when dependency changes
             if (param.dependsOn) {
-              const dependencyField = Array.from(inputs).find(i => i.name === param.dependsOn);
-              if (dependencyField) {
-                dependencyField.addEventListener('change', () => {
-                  selectedValues.clear();
-                  hiddenInput.value = '';
-                  renderChips();
-                  updateUrl();
-                  fetchOptions();
-                });
-              }
+              setTimeout(() => {
+                const dependencyField = endpoint.querySelector(`[name="${param.dependsOn}"]`);
+                if (dependencyField) {
+                  dependencyField.addEventListener('change', () => {
+                    selectedValues.clear();
+                    hiddenInput.value = '';
+                    renderChips();
+                    updateUrl();
+                    fetchOptions();
+                  });
+                }
+              }, 0);
             }
 
             container.appendChild(chipsContainer);

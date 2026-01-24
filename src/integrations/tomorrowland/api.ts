@@ -1,5 +1,5 @@
 import request from '../../server/cache.ts'
-import { config } from './service.ts'
+import { TL_CONFIG } from './service.ts'
 import type {
   TomorrowlandApiResponse,
   TomorrowlandPerformance,
@@ -19,7 +19,7 @@ export async function fetchPerformances(
   try {
     const response = await request<TomorrowlandApiResponse>(
       url,
-      `${config.id}-fetchPerformances-${weekend}`,
+      `${TL_CONFIG.id}-fetchPerformances-${weekend}`,
     )
     return response.performances
   } catch (error) {
@@ -34,7 +34,7 @@ export async function fetchStages(): Promise<TomorrowlandStageInfo[]> {
   try {
     const response = await request<TomorrowlandStagesResponse>(
       url,
-      `${config.id}-fetchStages`,
+      `${TL_CONFIG.id}-fetchStages`,
     )
     return response.stages
   } catch (error) {

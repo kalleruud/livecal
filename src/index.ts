@@ -18,7 +18,17 @@ const hostname = process.env.HOST || '0.0.0.0'
 const server = Bun.serve({
   port,
   hostname,
-  fetch: handleRequest,
+  fetch: async (req: Request) => {
+    try {
+      return await handleRequest(req)
+    } catch (error) {
+      console.error('Error handling request:', error)
+      if (!(error instanceof Error)) throw error
+      return new Response(`Internal Server Error: ${error.message}`, {
+        status: 500,
+      })
+    }
+  },
 })
 
 console.log(`Server running at http://${server.hostname}:${server.port}`)

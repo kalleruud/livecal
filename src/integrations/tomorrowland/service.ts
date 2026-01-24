@@ -1,6 +1,5 @@
 import type { IcsCalendar } from 'ts-ics'
 import { generateIcsCalendar } from 'ts-ics'
-import * as cache from '../../server/cache.ts'
 import type {
   IntegrationConfig,
   IntegrationService,
@@ -11,14 +10,14 @@ import { fetchPerformances, fetchStages } from './api.ts'
 import { buildCalendar } from './calendar.ts'
 import type { TomorrowlandQueryParams, Weekend } from './types.ts'
 
-export const config: IntegrationConfig = {
+export const TL_CONFIG: IntegrationConfig = {
   id: 'tomorrowland',
   name: 'Tomorrowland',
   basePath: '/api/tomorrowland',
 }
 
 export class TomorrowlandIntegration implements IntegrationService {
-  readonly config = config
+  readonly config = TL_CONFIG
 
   async getCalendar(params: QueryParams): Promise<IcsCalendar> {
     const tlParams = this.parseParams(params)
@@ -40,17 +39,8 @@ export class TomorrowlandIntegration implements IntegrationService {
             return new Response(error, { status: 400 })
           }
 
-          const cacheKey = this.getCacheKey(params)
-          let icsContent = await cache.get(cacheKey)
-
-          if (icsContent) {
-            console.log(`Cache hit for ${cacheKey}`)
-          } else {
-            console.log(`Cache miss for ${cacheKey}, fetching from API...`)
-            const calendar = await this.getCalendar(params)
-            icsContent = generateIcsCalendar(calendar)
-            await cache.set(cacheKey, icsContent)
-          }
+          const calendar = await this.getCalendar(params)
+          const icsContent = generateIcsCalendar(calendar)
 
           const contentType = req.headers.get('Content-Type')
           if (contentType?.includes('application/json')) {

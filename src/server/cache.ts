@@ -36,9 +36,10 @@ export default async function request<T extends object>(
   console.log(`Cache miss for ${url}, fetching...`)
   const response = await fetch(url)
   if (response.ok) {
-    await set(key, await response.text())
+    const text = await response.text()
+    await set(key, text)
     console.log(`Fetched and cached ${url}`)
-    return (await response.json()) as T
+    return JSON.parse(text) as T
   }
 
   if (cachedContent) {

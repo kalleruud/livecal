@@ -57,22 +57,30 @@ livecal/
 │   │
 │   ├── integrations/               # All calendar integrations
 │   │   ├── index.ts                # Integration registry
-│   │   ├── interface.ts            # IntegrationService interface
+│   │   │
+│   │   ├── framework/              # Declarative integration framework
+│   │   │   ├── types.ts            # CalendarIntegration type
+│   │   │   ├── params.ts           # ParamSchema types & validation
+│   │   │   ├── handlers.ts         # Route handlers (calendar, options)
+│   │   │   ├── register.ts         # createIntegration() factory
+│   │   │   └── index.ts            # Public exports
 │   │   │
 │   │   ├── ibu/                    # IBU Biathlon integration
 │   │   │   ├── README.md           # Integration documentation
 │   │   │   ├── types.ts            # API response types
-│   │   │   ├── service.ts          # IntegrationService implementation
+│   │   │   ├── definition.ts       # Declarative integration definition
 │   │   │   ├── api.ts              # External API client
-│   │   │   ├── calendar.ts         # ICS calendar builder
+│   │   │   ├── events.ts           # Transform data to ICS events
+│   │   │   ├── calendar.ts         # Legacy calendar builder (for tests)
 │   │   │   └── duration.ts         # Event duration estimation
 │   │   │
 │   │   └── tomorrowland/           # Tomorrowland integration
 │   │       ├── README.md           # Integration documentation
 │   │       ├── types.ts            # API response types
-│   │       ├── service.ts          # IntegrationService implementation
+│   │       ├── definition.ts       # Declarative integration definition
 │   │       ├── api.ts              # External API client
-│   │       └── calendar.ts         # ICS calendar builder
+│   │       ├── events.ts           # Transform data to ICS events
+│   │       └── calendar.ts         # Legacy calendar builder (for tests)
 │   │
 │   └── static/                     # Static files (homepage, etc.)
 │
@@ -82,41 +90,9 @@ livecal/
     └── tomorrowland-options.test.ts  # Tomorrowland options endpoint tests
 ```
 
-## Integration Interface
+## Declarative Integration Framework
 
-All integrations implement the same interface, making it easy to add new calendar sources.
-
-### Interface Definition (`src/integrations/interface.ts`)
-
-```typescript
-import type { IcsCalendar } from 'ts-ics'
-
-export interface IntegrationConfig {
-  id: string
-  name: string
-  basePath: string
-  cacheCron?: string
-}
-
-export interface QueryParams {
-  [key: string]: string | boolean | undefined
-}
-
-export type RouteHandler = (req: Request) => Response | Promise<Response>
-
-export interface Route {
-  path: string
-  handler: RouteHandler
-}
-
-export interface IntegrationService {
-  readonly config: IntegrationConfig
-  getCalendar(params: QueryParams): Promise<IcsCalendar>
-  getRoutes(): Route[]
-  validateParams(params: QueryParams): string | null
-  getCacheKey(params: QueryParams): string
-}
-```
+Integrations are defined declaratively - you specify **what** your integration needs, and the framework handles routing, validation, and ICS generation.
 
 ### Adding a New Integration
 
@@ -127,101 +103,108 @@ src/integrations/
 └── myservice/
     ├── README.md       # Integration documentation
     ├── types.ts        # API response types
-    ├── service.ts      # IntegrationService implementation
+    ├── definition.ts   # Declarative integration definition
     ├── api.ts          # External API client
-    └── calendar.ts     # ICS calendar builder
+    └── events.ts       # Transform data to ICS events
 ```
 
-2. Implement the service (`service.ts`):
+2. Define the integration (`definition.ts`):
 
 ```typescript
-import type { IcsCalendar } from 'ts-ics'
-import { generateIcsCalendar } from 'ts-ics'
-import * as cache from '../../server/cache.ts'
-import type {
-  IntegrationConfig,
-  IntegrationService,
-  QueryParams,
-  Route,
-} from '../interface.ts'
-import { fetchData } from './api.ts'
-import { buildCalendar } from './calendar.ts'
+import type { IcsEvent } from 'ts-ics'
+import { createIntegration } from '../framework/index.ts'
+import { fetchItems } from './api.ts'
+import type { MyItem, MyParams } from './types.ts'
 
-const config: IntegrationConfig = {
+export default createIntegration<MyItem[], MyParams>({
+  // Identity
   id: 'myservice',
   name: 'My Service',
-  basePath: '/api/myservice',
-}
 
-export class MyServiceIntegration implements IntegrationService {
-  readonly config = config
+  // Calendar metadata
+  calendar: {
+    prodId: '-//Livecal//My Service//EN',
+    name: 'My Service Calendar', // Can also be a function: (params) => `Calendar ${params.filter}`
+  },
 
-  async getCalendar(params: QueryParams): Promise<IcsCalendar> {
-    const data = await fetchData(params)
-    return buildCalendar(data)
-  }
+  // Endpoint: creates /api/myservice/calendar.ics
+  endpoint: 'calendar.ics',
 
-  getRoutes(): Route[] {
-    return [
-      {
-        path: `${this.config.basePath}/calendar.ics`,
-        handler: async (req: Request) => {
-          const url = new URL(req.url)
-          const params = Object.fromEntries(url.searchParams)
+  // Parameter schema - defines validation, parsing, and UI metadata
+  params: {
+    filter: {
+      type: 'text',
+      label: 'Filter',
+      placeholder: 'Enter filter text',
+    },
+    category: {
+      type: 'select',
+      label: 'Category',
+      required: true,
+      options: [
+        { value: 'all', label: 'All' },
+        { value: 'active', label: 'Active Only' },
+      ],
+    },
+    showCompleted: {
+      type: 'checkbox',
+      label: 'Show Completed',
+      default: false,
+    },
+  },
 
-          const error = this.validateParams(params)
-          if (error) {
-            return new Response(error, { status: 400 })
-          }
+  // Fetch data from external API
+  fetchData: async params => {
+    return fetchItems(params.category, params.filter)
+  },
 
-          const cacheKey = this.getCacheKey(params)
-          let icsContent = await cache.get(cacheKey)
-
-          if (!icsContent) {
-            const calendar = await this.getCalendar(params)
-            icsContent = generateIcsCalendar(calendar)
-            await cache.set(cacheKey, icsContent)
-          }
-
-          return new Response(icsContent, {
-            headers: { 'Content-Type': 'text/calendar; charset=utf-8' },
-          })
-        },
-      },
-    ]
-  }
-
-  validateParams(params: QueryParams): string | null {
-    // Return error message if invalid, null if valid
-    return null
-  }
-
-  getCacheKey(params: QueryParams): string {
-    return `myservice-calendar.ics`
-  }
-}
+  // Transform data to ICS events
+  toEvents: (items, params) => {
+    let filtered = items
+    if (!params.showCompleted) {
+      filtered = filtered.filter(item => !item.completed)
+    }
+    return filtered.map(item => ({
+      uid: item.id,
+      stamp: { date: new Date() },
+      start: { date: new Date(item.date) },
+      summary: item.title,
+      description: item.description,
+    }))
+  },
+})
 ```
 
-3. Register the integration (`src/integrations/index.ts`):
+3. Register in `src/integrations/index.ts`:
 
 ```typescript
-import { IBUIntegration } from './ibu/service.ts'
-import { MyServiceIntegration } from './myservice/service.ts'
-import type { IntegrationService, Route } from './interface.ts'
+import myServiceIntegration from './myservice/definition.ts'
 
-export const integrations: IntegrationService[] = [
-  new IBUIntegration(),
-  new MyServiceIntegration(),
+export const integrations = [
+  // ... existing integrations
+  myServiceIntegration,
 ]
-
-export function getAllRoutes(): Route[] {
-  return integrations.flatMap(integration => integration.getRoutes())
-}
 ```
 
-4. Add tests for the calendar output in `tests/myservice-calendar.test.ts`
+4. Add tests for the `toEvents` function in `tests/myservice-calendar.test.ts`
 
 5. Update this README with the new integration endpoint
+
+### Parameter Types
+
+| Type             | Description            | Options                                          |
+| ---------------- | ---------------------- | ------------------------------------------------ |
+| `text`           | Text input             | `required`, `default`, `placeholder`, `validate` |
+| `select`         | Single-select dropdown | `required`, `default`, `options`, `validate`     |
+| `checkbox`       | Boolean toggle         | `default`                                        |
+| `dynamic-select` | Async multi-select     | `multiple`, `dependsOn`, `fetchOptions`          |
+
+### Framework Benefits
+
+- **No boilerplate**: Routes, validation, and ICS generation are handled automatically
+- **Type-safe**: Full TypeScript support with inferred parameter types
+- **Self-documenting**: Parameter schema generates UI metadata for the frontend
+- **Testable**: Pure `toEvents` function makes testing straightforward
 
 ## Environment Variables
 

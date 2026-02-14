@@ -1,10 +1,9 @@
-import type { IcsCalendar, IcsEvent } from "ts-ics";
+import type { IcsEvent } from "ts-ics";
 import { estimateDuration } from "./duration.ts";
 import type {
 	DisciplineId,
 	IBUCompetition,
 	IBUEvent,
-	IBUQueryParams,
 	IBUResult,
 	IBUResultsData,
 	StartMode,
@@ -52,18 +51,15 @@ function formatShootingPositions(positions?: string): string {
 function formatCompetitionDetails(competition: IBUCompetition): string {
 	const lines: string[] = [];
 
-	// Distance (skip if empty)
 	if (competition.km) {
 		lines.push(`Distance: ${competition.km} km`);
 	}
 
-	// Discipline type
 	const disciplineName = DISCIPLINE_NAME[competition.DisciplineId];
 	if (disciplineName) {
 		lines.push(`Type: ${disciplineName}`);
 	}
 
-	// Start mode
 	if (competition.StartMode) {
 		const startModeName = START_MODE_NAME[competition.StartMode];
 		if (startModeName) {
@@ -71,7 +67,6 @@ function formatCompetitionDetails(competition: IBUCompetition): string {
 		}
 	}
 
-	// Shooting details
 	if (competition.NrShootings) {
 		let shootingInfo = `Shootings: ${competition.NrShootings}`;
 		const positions = formatShootingPositions(competition.ShootingPositions);
@@ -81,19 +76,16 @@ function formatCompetitionDetails(competition: IBUCompetition): string {
 		lines.push(shootingInfo);
 	}
 
-	// Penalty info
 	if (competition.PenaltySeconds && competition.PenaltySeconds > 0) {
 		lines.push(`Penalty: ${competition.PenaltySeconds}s per miss`);
 	} else if (isRelayDiscipline(competition.DisciplineId)) {
 		lines.push("Penalty: 150m loop per miss");
 	}
 
-	// Spare rounds for relays
 	if (competition.HasSpareRounds && competition.NrSpareRounds) {
 		lines.push(`Spare rounds: ${competition.NrSpareRounds} per shooting`);
 	}
 
-	// Relay legs
 	if (competition.NrLegs && competition.NrLegs > 1) {
 		lines.push(`Legs: ${competition.NrLegs}`);
 	}
@@ -114,7 +106,6 @@ function formatStartListOrResults(
 	}
 
 	if (isStartList) {
-		// Filter out athletes without valid bib numbers (reserves/withdrawn)
 		const withBib = filtered.filter(
 			(r) =>
 				r.Bib && r.Bib !== "null" && !Number.isNaN(Number.parseInt(r.Bib, 10)),
@@ -124,7 +115,6 @@ function formatStartListOrResults(
 			return null;
 		}
 
-		// Format as start list - sort by Bib number
 		const sorted = [...withBib].sort(
 			(a, b) => Number.parseInt(a.Bib, 10) - Number.parseInt(b.Bib, 10),
 		);
@@ -132,7 +122,6 @@ function formatStartListOrResults(
 		const content = sorted
 			.map((r) => {
 				if (isRelay) {
-					// For teams, find and list the athletes
 					const athletes = results
 						.filter((athlete) => !athlete.IsTeam && athlete.Bib === r.Bib)
 						.sort((a, b) => (a.Leg || 0) - (b.Leg || 0))
@@ -149,7 +138,6 @@ function formatStartListOrResults(
 		return { title: "Start List", content };
 	}
 
-	// Format as results - sort by ResultOrder, then StartOrder
 	const sorted = [...filtered].sort((a, b) => {
 		if (a.ResultOrder !== b.ResultOrder) {
 			return a.ResultOrder - b.ResultOrder;
@@ -160,11 +148,9 @@ function formatStartListOrResults(
 	const content = sorted
 		.map((r) => {
 			const time = r.TotalTime || "DNF";
-			// Skip rank number for DNF (no valid rank)
 			const rankPrefix = r.Rank && r.Rank !== "null" ? `${r.Rank}. ` : "";
 
 			if (isRelay) {
-				// For teams, find and list the athletes
 				const athletes = results
 					.filter((athlete) => !athlete.IsTeam && athlete.Bib === r.Bib)
 					.sort((a, b) => (a.Leg || 0) - (b.Leg || 0))
@@ -194,7 +180,10 @@ function buildStartListUrl(competition: IBUCompetition): string {
 	return `https://www.biathlonworld.com/startlist/${competition.RaceId}`;
 }
 
-function eventToIcsEvent(event: IBUEvent): IcsEvent {
+/**
+ * Transform an IBU event (multi-day) into an ICS event.
+ */
+export function eventToIcsEvent(event: IBUEvent): IcsEvent {
 	return {
 		uid: event.EventId,
 		stamp: { date: new Date() },
@@ -206,7 +195,10 @@ function eventToIcsEvent(event: IBUEvent): IcsEvent {
 	};
 }
 
-function competitionToIcsEvent(
+/**
+ * Transform an IBU competition (single race) into an ICS event.
+ */
+export function competitionToIcsEvent(
 	competition: IBUCompetition,
 	event: IBUEvent,
 	resultsData: IBUResultsData | undefined,
@@ -218,16 +210,13 @@ function competitionToIcsEvent(
 		? "✅"
 		: DISCIPLINE_EMOJI[competition.DisciplineId] || "📅";
 
-	// Build description with competition details
 	const descriptionParts: string[] = [];
 
-	// Add race format details
 	const details = formatCompetitionDetails(competition);
 	if (details) {
 		descriptionParts.push(details);
 	}
 
-	// Add start list or results if available
 	if (resultsData && resultsData.results.length > 0) {
 		const formatted = formatStartListOrResults(
 			resultsData.results,
@@ -250,7 +239,6 @@ function competitionToIcsEvent(
 	);
 	const endTime = new Date(startTime.getTime() + duration);
 
-	// Use start list URL for scheduled competitions, results URL for completed ones
 	const url = isCompleted
 		? buildCompetitionUrl(competition)
 		: buildStartListUrl(competition);
@@ -264,48 +252,5 @@ function competitionToIcsEvent(
 		description,
 		location: `${competition.Location}, ${event.ShortDescription}`,
 		url,
-	};
-}
-
-export function buildCalendar(
-	events: IBUEvent[],
-	competitions: Map<string, IBUCompetition[]>,
-	results: Map<string, IBUResultsData>,
-	params: IBUQueryParams,
-): IcsCalendar {
-	const icsEvents: IcsEvent[] = [];
-
-	const wcEvents = events.filter((e) => e.Level === 1);
-
-	// Flatten all competitions for historical duration lookup
-	const allCompetitions = [...competitions.values()].flat();
-
-	for (const event of wcEvents) {
-		if (params.includeEvents) {
-			icsEvents.push(eventToIcsEvent(event));
-		}
-
-		if (params.includeComps) {
-			const eventCompetitions = competitions.get(event.EventId) || [];
-			for (const competition of eventCompetitions) {
-				const resultsData = results.get(competition.RaceId);
-				icsEvents.push(
-					competitionToIcsEvent(
-						competition,
-						event,
-						resultsData,
-						allCompetitions,
-						results,
-					),
-				);
-			}
-		}
-	}
-
-	return {
-		version: "2.0",
-		prodId: "-//Livecal//IBU Biathlon World Cup//EN",
-		name: "IBU Biathlon World Cup",
-		events: icsEvents,
 	};
 }

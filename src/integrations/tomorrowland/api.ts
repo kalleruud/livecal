@@ -1,44 +1,44 @@
-import request from '../../server/cache.ts'
-import { TL_CONFIG } from './service.ts'
+import request from "../../server/cache.ts";
 import type {
-  TomorrowlandApiResponse,
-  TomorrowlandPerformance,
-  TomorrowlandStageInfo,
-  TomorrowlandStagesResponse,
-  Weekend,
-} from './types.ts'
+	TomorrowlandApiResponse,
+	TomorrowlandPerformance,
+	TomorrowlandStageInfo,
+	TomorrowlandStagesResponse,
+	Weekend,
+} from "./types.ts";
 
-const BASE_URL = 'https://artist-lineup-cdn.tomorrowland.com'
-const API_TOKEN = '9205196e-3eef-45c0-a82e-72aa1bb3cf8f'
+const INTEGRATION_ID = "tomorrowland";
+const BASE_URL = "https://artist-lineup-cdn.tomorrowland.com";
+const API_TOKEN = "9205196e-3eef-45c0-a82e-72aa1bb3cf8f";
 
 export async function fetchPerformances(
-  weekend: Weekend
+	weekend: Weekend,
 ): Promise<TomorrowlandPerformance[]> {
-  const url = `${BASE_URL}/TL26BE-${weekend}-${API_TOKEN}.json`
+	const url = `${BASE_URL}/TL26BE-${weekend}-${API_TOKEN}.json`;
 
-  try {
-    const response = await request<TomorrowlandApiResponse>(
-      url,
-      `${TL_CONFIG.id}-fetchPerformances-${weekend}`
-    )
-    return response.performances
-  } catch (error) {
-    console.error(error)
-    return []
-  }
+	try {
+		const response = await request<TomorrowlandApiResponse>(
+			url,
+			`${INTEGRATION_ID}-fetchPerformances-${weekend}`,
+		);
+		return response.performances;
+	} catch (error) {
+		console.error(error);
+		return [];
+	}
 }
 
 export async function fetchStages(): Promise<TomorrowlandStageInfo[]> {
-  const url = `${BASE_URL}/stages-TL26BE-${API_TOKEN}.json`
+	const url = `${BASE_URL}/stages-TL26BE-${API_TOKEN}.json`;
 
-  try {
-    const response = await request<TomorrowlandStagesResponse>(
-      url,
-      `${TL_CONFIG.id}-fetchStages`
-    )
-    return response.stages
-  } catch (error) {
-    console.error(error)
-    return []
-  }
+	try {
+		const response = await request<TomorrowlandStagesResponse>(
+			url,
+			`${INTEGRATION_ID}-fetchStages`,
+		);
+		return response.stages;
+	} catch (error) {
+		console.error(error);
+		return [];
+	}
 }

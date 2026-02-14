@@ -1,17 +1,19 @@
-import { IBUIntegration } from './ibu/service.ts'
-import type { IntegrationService, Route } from './interface.ts'
-import { TomorrowlandIntegration } from './tomorrowland/service.ts'
+import type { RegisteredIntegration, Route } from "./framework/index.ts";
+import ibuIntegration from "./ibu/definition.ts";
+import tomorrowlandIntegration from "./tomorrowland/definition.ts";
 
-export const integrations: IntegrationService[] = [
-  new IBUIntegration(),
-  new TomorrowlandIntegration(),
-]
+/** All registered integrations */
+export const integrations: RegisteredIntegration[] = [
+	ibuIntegration,
+	tomorrowlandIntegration,
+];
 
+/** Get all routes with their associated integration metadata */
 export function getAllRoutes(): Array<{
-  route: Route
-  integration: IntegrationService
+	route: Route;
+	integration: RegisteredIntegration;
 }> {
-  return integrations.flatMap(integration =>
-    integration.getRoutes().map(route => ({ route, integration }))
-  )
+	return integrations.flatMap((integration) =>
+		integration.routes.map((route) => ({ route, integration })),
+	);
 }

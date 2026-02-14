@@ -42,13 +42,13 @@ const FALLBACK_DURATION_MS = 90 * 60 * 1000
  */
 function getLast5FinishersAverage(
   results: IBUResult[] | undefined,
-  isRelay: boolean,
+  isRelay: boolean
 ): number | null {
   if (!results || !Array.isArray(results)) {
     return null
   }
 
-  const filtered = results.filter((r) => r.IsTeam === isRelay && r.TotalTime)
+  const filtered = results.filter(r => r.IsTeam === isRelay && r.TotalTime)
 
   if (filtered.length === 0) {
     return null
@@ -107,7 +107,7 @@ function parseDistance(km: string): number {
 function calculateAverageDuration(
   competitions: IBUCompetition[],
   allResults: Map<string, IBUResultsData>,
-  isRelay: boolean,
+  isRelay: boolean
 ): number | null {
   const durations: number[] = []
 
@@ -139,12 +139,12 @@ function getHistoricalDuration(
   disciplineId: DisciplineId,
   catId: CategoryId,
   allCompetitions: IBUCompetition[],
-  allResults: Map<string, IBUResultsData>,
+  allResults: Map<string, IBUResultsData>
 ): number | null {
   const isRelay = disciplineId === 'RL' || disciplineId === 'SR'
 
   // Find all competitions with the same discipline and category that have results (not just start list)
-  const matchingCompetitions = allCompetitions.filter((c) => {
+  const matchingCompetitions = allCompetitions.filter(c => {
     const data = allResults.get(c.RaceId)
     return (
       c.DisciplineId === disciplineId &&
@@ -169,7 +169,7 @@ function getSimilarEventDuration(
   disciplineId: DisciplineId,
   km: string,
   allCompetitions: IBUCompetition[],
-  allResults: Map<string, IBUResultsData>,
+  allResults: Map<string, IBUResultsData>
 ): number | null {
   const isRelay = disciplineId === 'RL' || disciplineId === 'SR'
   const targetDistance = parseDistance(km)
@@ -179,7 +179,7 @@ function getSimilarEventDuration(
   }
 
   // Find competitions with same discipline (any category) and similar distance that have results
-  const similarCompetitions = allCompetitions.filter((c) => {
+  const similarCompetitions = allCompetitions.filter(c => {
     const data = allResults.get(c.RaceId)
     if (
       c.DisciplineId !== disciplineId ||
@@ -217,7 +217,7 @@ export function estimateDuration(
   competition: IBUCompetition,
   competitionResults?: IBUResult[],
   allCompetitions?: IBUCompetition[],
-  allResults?: Map<string, IBUResultsData>,
+  allResults?: Map<string, IBUResultsData>
 ): number {
   const isRelay =
     competition.DisciplineId === 'RL' || competition.DisciplineId === 'SR'
@@ -236,7 +236,7 @@ export function estimateDuration(
       competition.DisciplineId,
       competition.catId,
       allCompetitions,
-      allResults,
+      allResults
     )
 
     if (historicalDuration) {
@@ -248,7 +248,7 @@ export function estimateDuration(
       competition.DisciplineId,
       competition.km,
       allCompetitions,
-      allResults,
+      allResults
     )
 
     if (similarDuration) {

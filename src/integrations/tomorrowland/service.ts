@@ -79,7 +79,7 @@ export class TomorrowlandIntegration implements IntegrationService {
           if (!['W1', 'W2'].includes(weekend)) {
             return new Response(
               "Invalid weekend parameter: must be 'W1' or 'W2'",
-              { status: 400 },
+              { status: 400 }
             )
           }
 
@@ -157,11 +157,11 @@ export class TomorrowlandIntegration implements IntegrationService {
     const weekend = (query.weekend as Weekend) || 'W1'
 
     const artists = query.artist
-      ? (query.artist as string).split(',').map((a) => a.trim())
+      ? (query.artist as string).split(',').map(a => a.trim())
       : undefined
 
     const stages = query.stage
-      ? (query.stage as string).split(',').map((s) => s.trim())
+      ? (query.stage as string).split(',').map(s => s.trim())
       : undefined
 
     return {
@@ -175,29 +175,29 @@ export class TomorrowlandIntegration implements IntegrationService {
     const performances = await fetchPerformances(weekend)
     const artistNames = new Set<string>()
 
-    performances.forEach((perf) => {
-      perf.artists.forEach((artist) => {
+    performances.forEach(perf => {
+      perf.artists.forEach(artist => {
         artistNames.add(artist.name)
       })
     })
 
     return Array.from(artistNames)
       .sort((a, b) =>
-        a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }),
+        a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
       )
-      .map((name) => ({ value: name, label: name }))
+      .map(name => ({ value: name, label: name }))
   }
 
   private async extractStageOptions(): Promise<ParamOption[]> {
     const stages = await fetchStages()
 
     return stages
-      .map((stage) => ({ value: stage.name, label: stage.name }))
+      .map(stage => ({ value: stage.name, label: stage.name }))
       .sort((a, b) =>
         a.label.localeCompare(b.label, undefined, {
           numeric: true,
           sensitivity: 'base',
-        }),
+        })
       )
   }
 }

@@ -13,12 +13,8 @@
         "header": [],
         "url": {
           "raw": "{{base_url}}/Organizers?OrganizerId=nms",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "Organizers"
-          ],
+          "host": ["{{base_url}}"],
+          "path": ["Organizers"],
           "query": [
             {
               "key": "OrganizerId",
@@ -45,12 +41,8 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/Organizers?OrganizerId=nms",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "Organizers"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["Organizers"],
               "query": [
                 {
                   "key": "OrganizerId",
@@ -138,17 +130,8 @@
         "url": {
           "raw": "https://graphql.contentful.com/content/v1/spaces/cz0vl36hcq0x",
           "protocol": "https",
-          "host": [
-            "graphql",
-            "contentful",
-            "com"
-          ],
-          "path": [
-            "content",
-            "v1",
-            "spaces",
-            "cz0vl36hcq0x"
-          ]
+          "host": ["graphql", "contentful", "com"],
+          "path": ["content", "v1", "spaces", "cz0vl36hcq0x"]
         }
       },
       "response": [
@@ -167,17 +150,8 @@
             "url": {
               "raw": "https://graphql.contentful.com/content/v1/spaces/cz0vl36hcq0x",
               "protocol": "https",
-              "host": [
-                "graphql",
-                "contentful",
-                "com"
-              ],
-              "path": [
-                "content",
-                "v1",
-                "spaces",
-                "cz0vl36hcq0x"
-              ]
+              "host": ["graphql", "contentful", "com"],
+              "path": ["content", "v1", "spaces", "cz0vl36hcq0x"]
             }
           },
           "status": "OK",
@@ -305,12 +279,8 @@
         "header": [],
         "url": {
           "raw": "{{base_url}}/Results?RaceId=BT2526SWRLCP06SMSI&Language=en",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "Results"
-          ],
+          "host": ["{{base_url}}"],
+          "path": ["Results"],
           "query": [
             {
               "key": "RaceId",
@@ -331,12 +301,8 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/Results?RaceId=BT2526SWRLCP06SMSI&Language=en",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "Results"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["Results"],
               "query": [
                 {
                   "key": "RaceId",
@@ -410,12 +376,8 @@
         "header": [],
         "url": {
           "raw": "{{base_url}}/Competitions?EventId=BT2526SWRLCP06&Language=EN",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "Competitions"
-          ],
+          "host": ["{{base_url}}"],
+          "path": ["Competitions"],
           "query": [
             {
               "key": "EventId",
@@ -436,12 +398,8 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/Competitions?EventId=BT2526SWRLCP06&Language=EN",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "Competitions"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["Competitions"],
               "query": [
                 {
                   "key": "EventId",
@@ -515,12 +473,8 @@
         "header": [],
         "url": {
           "raw": "{{base_url}}/Events?SeasonId=2526",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "Events"
-          ],
+          "host": ["{{base_url}}"],
+          "path": ["Events"],
           "query": [
             {
               "key": "SeasonId",
@@ -537,12 +491,8 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/Events?SeasonId=2526",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "Events"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["Events"],
               "query": [
                 {
                   "key": "SeasonId",
@@ -612,12 +562,8 @@
         "header": [],
         "url": {
           "raw": "{{base_url}}/seasonperformance?SeasonId=2526&IBUId=BTNOR12002199701&Level=1",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "seasonperformance"
-          ],
+          "host": ["{{base_url}}"],
+          "path": ["seasonperformance"],
           "query": [
             {
               "key": "SeasonId",
@@ -642,12 +588,8 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/seasonperformance?SeasonId=2526&IBUId=BTNOR12002199701&Level=1",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "seasonperformance"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["seasonperformance"],
               "query": [
                 {
                   "key": "SeasonId",
@@ -725,12 +667,8 @@
         "header": [],
         "url": {
           "raw": "{{base_url}}/CISBios?IBUId=BTNOR12002199701&Language=EN",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "CISBios"
-          ],
+          "host": ["{{base_url}}"],
+          "path": ["CISBios"],
           "query": [
             {
               "key": "IBUId",
@@ -751,12 +689,8 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/CISBios?IBUId=BTNOR12002199701&Language=EN",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "CISBios"
-              ],
+              "host": ["{{base_url}}"],
+              "path": ["CISBios"],
               "query": [
                 {
                   "key": "IBUId",
@@ -841,9 +775,7 @@
         "type": "text/javascript",
         "packages": {},
         "requests": {},
-        "exec": [
-          ""
-        ]
+        "exec": [""]
       }
     },
     {
@@ -852,9 +784,7 @@
         "type": "text/javascript",
         "packages": {},
         "requests": {},
-        "exec": [
-          ""
-        ]
+        "exec": [""]
       }
     }
   ],

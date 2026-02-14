@@ -22,7 +22,7 @@ export function addRoute(route: Route, integration?: IntegrationService): void {
 }
 
 function getCalendarRoutes(): string[] {
-  return routes.filter((r) => r.path.endsWith('.ics')).map((r) => r.path)
+  return routes.filter(r => r.path.endsWith('.ics')).map(r => r.path)
 }
 
 async function loadTemplate(name: string): Promise<string> {
@@ -40,7 +40,7 @@ async function renderEndpoints(host: string): Promise<string> {
   const endpointTemplate = await loadTemplate('endpoint.html')
 
   return calendarRoutes
-    .map((path) => {
+    .map(path => {
       const webcalUrl = `webcal://${host}${path}`
       const integration = routeToIntegration.get(path)
       const params = integration?.getParamMetadata() || []
@@ -70,7 +70,7 @@ export async function handleRequest(req: Request): Promise<Response> {
     })
   }
 
-  const route = routes.find((r) => r.path === url.pathname)
+  const route = routes.find(r => r.path === url.pathname)
 
   if (route) {
     return route.handler(req)

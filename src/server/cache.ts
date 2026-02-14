@@ -23,7 +23,7 @@ async function ensureCacheDir(): Promise<void> {
  */
 export default async function request<T extends object>(
   url: string,
-  integrationId: string,
+  integrationId: string
 ): Promise<T> {
   const key: CacheKey = `${integrationId}-${url.toString()}`
 
@@ -44,12 +44,12 @@ export default async function request<T extends object>(
 
   if (cachedContent) {
     console.warn(
-      `Using stale cache for ${url} due to fetch error: ${response.status} - ${response.statusText}`,
+      `Using stale cache for ${url} due to fetch error: ${response.status} - ${response.statusText}`
     )
     return JSON.parse(cachedContent)
   }
   throw new Error(
-    `Failed to fetch ${url} (${response.status}): ${response.statusText} ${await response.text()}`,
+    `Failed to fetch ${url} (${response.status}): ${response.statusText} ${await response.text()}`
   )
 }
 
@@ -81,7 +81,7 @@ async function set(key: CacheKey, content: string): Promise<void> {
   await ensureCacheDir()
   const path = join(
     cacheDir,
-    `${key.replaceAll(invalidPathCaracters, '_')}.json`,
+    `${key.replaceAll(invalidPathCaracters, '_')}.json`
   )
   cache.set(key, { isValid: true, path })
   await Bun.write(path, content)
@@ -102,7 +102,7 @@ export async function invalidate(key: CacheKey): Promise<void> {
 export async function clear(): Promise<void> {
   await ensureCacheDir()
   const files = await readdir(cacheDir)
-  await Promise.all(files.map((file) => unlink(join(cacheDir, file))))
+  await Promise.all(files.map(file => unlink(join(cacheDir, file))))
   cache.clear()
   console.log(`Cache cleared: ${files.length} files removed`)
 }

@@ -19,10 +19,12 @@ GET /api/tomorrowland/options?type={type}&weekend={weekend}
 Returns available artists and stages for a given weekend to populate multi-select dropdowns.
 
 **Query Parameters:**
+
 - `type` (required): `artists` or `stages`
 - `weekend` (required): `W1` or `W2`
 
 **Response:**
+
 ```json
 {
   "options": [
@@ -34,11 +36,11 @@ Returns available artists and stages for a given weekend to populate multi-selec
 
 ## Parameters
 
-| Parameter | Required | Values | Description |
-| --------- | -------- | ------ | ----------- |
-| `weekend` | Yes | `W1`, `W2` | Festival weekend (W1 = Weekend 1, W2 = Weekend 2) |
-| `artist` | No | comma separated string | Filter by artist names (comma-separated, case-insensitive match) |
-| `stage` | No | comma separated string | Filter by stage names (comma-separated, case-insensitive match) |
+| Parameter | Required | Values                 | Description                                                      |
+| --------- | -------- | ---------------------- | ---------------------------------------------------------------- |
+| `weekend` | Yes      | `W1`, `W2`             | Festival weekend (W1 = Weekend 1, W2 = Weekend 2)                |
+| `artist`  | No       | comma separated string | Filter by artist names (comma-separated, case-insensitive match) |
+| `stage`   | No       | comma separated string | Filter by stage names (comma-separated, case-insensitive match)  |
 
 ### Web UI
 
@@ -59,11 +61,11 @@ All data is fetched from the Tomorrowland artist lineup CDN. The API token is `9
 
 ### API Endpoints
 
-| Endpoint | URL Pattern | Description |
-| -------- | ----------- | ----------- |
-| Config | `config-TL26BE-{token}.json` | Festival configuration and weekend dates |
-| Stages | `stages-TL26BE-{token}.json` | All stages with hosts per date |
-| Performances | `TL26BE-{weekend}-{token}.json` | Performances for W1 or W2 |
+| Endpoint     | URL Pattern                     | Description                              |
+| ------------ | ------------------------------- | ---------------------------------------- |
+| Config       | `config-TL26BE-{token}.json`    | Festival configuration and weekend dates |
+| Stages       | `stages-TL26BE-{token}.json`    | All stages with hosts per date           |
+| Performances | `TL26BE-{weekend}-{token}.json` | Performances for W1 or W2                |
 
 Base URL: `https://artist-lineup-cdn.tomorrowland.com/`
 
@@ -160,6 +162,7 @@ Base URL: `https://artist-lineup-cdn.tomorrowland.com/`
 ### Calendar Building
 
 For each performance:
+
 - `uid`: Use performance `id`
 - `start`: Parse `startTime` (format: `YYYY-MM-DD HH:mm:ss+02:00`)
 - `end`: Parse `endTime`

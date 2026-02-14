@@ -21,20 +21,20 @@ A minimal server that converts external APIs into webcal/ICS calendar subscripti
 
 Feature specifications live in the `docs/` folder.
 
-| Document | Description |
-| -------- | ----------- |
+| Document                           | Description                     |
+| ---------------------------------- | ------------------------------- |
 | [Server & Routing](docs/server.md) | HTTP server and request routing |
-| [Caching](docs/cache.md) | Disk-based response caching |
-| [Scheduler](docs/scheduler.md) | CRON-based cache refresh |
+| [Caching](docs/cache.md)           | Disk-based response caching     |
+| [Scheduler](docs/scheduler.md)     | CRON-based cache refresh        |
 
 ## Integrations
 
 Each integration lives in its own folder under `src/integrations/` with its own README.
 
-| Integration | Endpoint | Documentation |
-| ----------- | -------- | ------------- |
-| IBU Biathlon World Cup | `/api/ibu/wc.ics` | [src/integrations/ibu/README.md](src/integrations/ibu/README.md) |
-| Tomorrowland | `/api/tomorrowland/lineup.ics` | [src/integrations/tomorrowland/README.md](src/integrations/tomorrowland/README.md) |
+| Integration            | Endpoint                       | Documentation                                                                      |
+| ---------------------- | ------------------------------ | ---------------------------------------------------------------------------------- |
+| IBU Biathlon World Cup | `/api/ibu/wc.ics`              | [src/integrations/ibu/README.md](src/integrations/ibu/README.md)                   |
+| Tomorrowland           | `/api/tomorrowland/lineup.ics` | [src/integrations/tomorrowland/README.md](src/integrations/tomorrowland/README.md) |
 
 See [Adding a New Integration](#adding-a-new-integration) for how to create new integrations.
 
@@ -215,7 +215,7 @@ export const integrations: IntegrationService[] = [
 ]
 
 export function getAllRoutes(): Route[] {
-  return integrations.flatMap((integration) => integration.getRoutes())
+  return integrations.flatMap(integration => integration.getRoutes())
 }
 ```
 
@@ -262,14 +262,14 @@ cp .env.example .env
 
 ### Scripts
 
-| Script            | Description                              |
-| ----------------- | ---------------------------------------- |
-| `bun run dev`     | Start development server with hot reload |
-| `bun run start`   | Start production server                  |
-| `bun test`        | Run tests                                |
-| `bun test --watch`| Run tests in watch mode                  |
-| `bun run lint`    | Run Biome linter                         |
-| `bun run format`  | Format code with Biome                   |
+| Script             | Description                              |
+| ------------------ | ---------------------------------------- |
+| `bun run dev`      | Start development server with hot reload |
+| `bun run start`    | Start production server                  |
+| `bun test`         | Run tests                                |
+| `bun test --watch` | Run tests in watch mode                  |
+| `bun run lint`     | Run Biome linter                         |
+| `bun run format`   | Format code with Biome                   |
 
 ## Testing
 
@@ -344,7 +344,7 @@ services:
     container_name: livecal
     restart: unless-stopped
     ports:
-      - "6699:6699"
+      - '6699:6699'
     environment:
       - PORT=6699
       - HOST=0.0.0.0
@@ -354,7 +354,7 @@ services:
     volumes:
       - livecal-cache:/app/cache
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6699/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:6699/health']
       interval: 30s
       timeout: 10s
       retries: 3

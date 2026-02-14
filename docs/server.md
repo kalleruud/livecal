@@ -21,9 +21,9 @@ The server uses Bun's built-in HTTP server (`Bun.serve`) to handle requests.
 
 ### Endpoints
 
-| Path | Description |
-| ---- | ----------- |
-| `/health` | Health check endpoint |
+| Path                       | Description                          |
+| -------------------------- | ------------------------------------ |
+| `/health`                  | Health check endpoint                |
 | `/api/{integration}/*.ics` | Calendar endpoints from integrations |
 
 ### Adding Routes

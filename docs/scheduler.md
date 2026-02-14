@@ -27,9 +27,9 @@ Standard CRON format with 5 fields:
 
 ### Examples
 
-| Expression | Description |
-| ---------- | ----------- |
-| `0 * * * *` | Every hour |
-| `*/15 * * * *` | Every 15 minutes |
-| `0 0 * * *` | Daily at midnight |
+| Expression     | Description       |
+| -------------- | ----------------- |
+| `0 * * * *`    | Every hour        |
+| `*/15 * * * *` | Every 15 minutes  |
+| `0 0 * * *`    | Daily at midnight |
 | `0 6,18 * * *` | At 6:00 and 18:00 |

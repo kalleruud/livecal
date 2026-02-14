@@ -6,12 +6,12 @@ on:
     branches:
       - main
     paths:
-      - "src/**"
-      - "Dockerfile"
-      - "package.json"
-      - "bun.lock"
-      - "tsconfig*.json"
-      - ".github/workflows/build-docker.yml"
+      - 'src/**'
+      - 'Dockerfile'
+      - 'package.json'
+      - 'bun.lock'
+      - 'tsconfig*.json'
+      - '.github/workflows/build-docker.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

@@ -126,7 +126,7 @@ describe('Tomorrowland Calendar Output', () => {
     const calendar = buildCalendar(
       mockPerformances,
       { weekend: 'W1' },
-      mockStages,
+      mockStages
     )
     const ics = generateIcsCalendar(calendar)
 
@@ -150,7 +150,7 @@ describe('Tomorrowland Calendar Output', () => {
     const calendar = buildCalendar(
       mockPerformances,
       { weekend: 'W1' },
-      mockStages,
+      mockStages
     )
     const ics = generateIcsCalendar(calendar)
 
@@ -162,7 +162,7 @@ describe('Tomorrowland Calendar Output', () => {
     const calendar = buildCalendar(
       mockPerformances,
       { weekend: 'W1' },
-      mockStages,
+      mockStages
     )
     const ics = generateIcsCalendar(calendar)
 
@@ -175,15 +175,13 @@ describe('Tomorrowland Calendar Output', () => {
     const calendar = buildCalendar(
       mockPerformances,
       { weekend: 'W1' },
-      mockStages,
+      mockStages
     )
 
-    const dvbbsEvent = calendar.events?.find((e) => e.uid === '2658072650')
+    const dvbbsEvent = calendar.events?.find(e => e.uid === '2658072650')
     expect(dvbbsEvent?.description).toContain('Artists: DVBBS')
 
-    const multiArtistEvent = calendar.events?.find(
-      (e) => e.uid === '2658072653',
-    )
+    const multiArtistEvent = calendar.events?.find(e => e.uid === '2658072653')
     expect(multiArtistEvent?.description).toContain('Artists: SvdS, Vinne')
   })
 
@@ -191,13 +189,13 @@ describe('Tomorrowland Calendar Output', () => {
     const calendar = buildCalendar(
       mockPerformances,
       { weekend: 'W1' },
-      mockStages,
+      mockStages
     )
 
-    const planaxisEvent = calendar.events?.find((e) => e.uid === '2658072652')
+    const planaxisEvent = calendar.events?.find(e => e.uid === '2658072652')
     expect(planaxisEvent?.description).toContain('Stage: HOSTED BY MONSTERCAT')
 
-    const roseGardenEvent = calendar.events?.find((e) => e.uid === '2658072653')
+    const roseGardenEvent = calendar.events?.find(e => e.uid === '2658072653')
     expect(roseGardenEvent?.description).toContain('Stage: HOSTED BY RAMPAGE')
   })
 
@@ -205,10 +203,10 @@ describe('Tomorrowland Calendar Output', () => {
     const calendar = buildCalendar(
       mockPerformances,
       { weekend: 'W1' },
-      mockStages,
+      mockStages
     )
 
-    const dvbbsEvent = calendar.events?.find((e) => e.uid === '2658072650')
+    const dvbbsEvent = calendar.events?.find(e => e.uid === '2658072650')
     expect(dvbbsEvent?.start).toBeDefined()
     expect(dvbbsEvent?.end).toBeDefined()
 
@@ -226,7 +224,7 @@ describe('Tomorrowland Calendar Output', () => {
         weekend: 'W1',
         artists: ['tiësto'],
       },
-      mockStages,
+      mockStages
     )
 
     expect(calendar.events).toHaveLength(1)
@@ -240,7 +238,7 @@ describe('Tomorrowland Calendar Output', () => {
         weekend: 'W1',
         artists: ['charlotte'],
       },
-      mockStages,
+      mockStages
     )
 
     expect(calendar.events).toHaveLength(1)
@@ -254,7 +252,7 @@ describe('Tomorrowland Calendar Output', () => {
         weekend: 'W1',
         stages: ['mainstage'],
       },
-      mockStages,
+      mockStages
     )
 
     expect(calendar.events).toHaveLength(1)
@@ -268,7 +266,7 @@ describe('Tomorrowland Calendar Output', () => {
         weekend: 'W1',
         stages: ['rose'],
       },
-      mockStages,
+      mockStages
     )
 
     expect(calendar.events).toHaveLength(1)
@@ -283,7 +281,7 @@ describe('Tomorrowland Calendar Output', () => {
         artists: ['dvbbs'],
         stages: ['planaxis'],
       },
-      mockStages,
+      mockStages
     )
 
     expect(calendar.events).toHaveLength(1)
@@ -298,7 +296,7 @@ describe('Tomorrowland Calendar Output', () => {
         weekend: 'W1',
         artists: ['nonexistent'],
       },
-      mockStages,
+      mockStages
     )
 
     expect(calendar.events).toHaveLength(0)
@@ -311,27 +309,27 @@ describe('Tomorrowland Calendar Output', () => {
         weekend: 'W1',
         artists: ['dvbbs', 'tiësto'],
       },
-      mockStages,
+      mockStages
     )
 
     expect(calendar.events).toHaveLength(2)
-    const names = calendar.events?.map((e) => e.summary) || []
-    expect(names.some((n) => n.includes('DVBBS'))).toBe(true)
-    expect(names.some((n) => n.includes('TIËSTO'))).toBe(true)
+    const names = calendar.events?.map(e => e.summary) || []
+    expect(names.some(n => n.includes('DVBBS'))).toBe(true)
+    expect(names.some(n => n.includes('TIËSTO'))).toBe(true)
   })
 
   test('sets correct weekend in calendar name', () => {
     const w1Calendar = buildCalendar(
       mockPerformances,
       { weekend: 'W1' },
-      mockStages,
+      mockStages
     )
     expect(w1Calendar.name).toContain('Weekend 1')
 
     const w2Calendar = buildCalendar(
       mockPerformances,
       { weekend: 'W2' },
-      mockStages,
+      mockStages
     )
     expect(w2Calendar.name).toContain('Weekend 2')
   })
@@ -345,7 +343,7 @@ describe('Tomorrowland Calendar Output', () => {
     expect(ics).toContain('TIËSTO')
 
     // But descriptions won't have host info
-    const dvbbsEvent = calendar.events?.find((e) => e.uid === '2658072650')
+    const dvbbsEvent = calendar.events?.find(e => e.uid === '2658072650')
     expect(dvbbsEvent?.description).not.toContain('HOSTED BY')
   })
 
@@ -353,9 +351,9 @@ describe('Tomorrowland Calendar Output', () => {
     const calendar = buildCalendar(
       mockPerformances,
       { weekend: 'W1' },
-      mockStages,
+      mockStages
     )
-    const uids = calendar.events?.map((e) => e.uid) || []
+    const uids = calendar.events?.map(e => e.uid) || []
 
     const uniqueUids = new Set(uids)
     expect(uniqueUids.size).toBe(uids.length)
@@ -385,7 +383,7 @@ describe('Tomorrowland Calendar Output', () => {
     const calendar = buildCalendar(
       [unpublishedPerformance],
       { weekend: 'W1' },
-      mockStages,
+      mockStages
     )
 
     const event = calendar.events?.[0]

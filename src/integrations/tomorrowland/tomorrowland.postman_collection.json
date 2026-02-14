@@ -14,14 +14,8 @@
         "url": {
           "raw": "https://artist-lineup-cdn.tomorrowland.com/config-TL26BE-9205196e-3eef-45c0-a82e-72aa1bb3cf8f.json",
           "protocol": "https",
-          "host": [
-            "artist-lineup-cdn",
-            "tomorrowland",
-            "com"
-          ],
-          "path": [
-            "config-TL26BE-9205196e-3eef-45c0-a82e-72aa1bb3cf8f.json"
-          ]
+          "host": ["artist-lineup-cdn", "tomorrowland", "com"],
+          "path": ["config-TL26BE-9205196e-3eef-45c0-a82e-72aa1bb3cf8f.json"]
         }
       },
       "response": [
@@ -33,11 +27,7 @@
             "url": {
               "raw": "https://artist-lineup-cdn.tomorrowland.com/config-TL26BE-9205196e-3eef-45c0-a82e-72aa1bb3cf8f.json",
               "protocol": "https",
-              "host": [
-                "artist-lineup-cdn",
-                "tomorrowland",
-                "com"
-              ],
+              "host": ["artist-lineup-cdn", "tomorrowland", "com"],
               "path": [
                 "config-TL26BE-9205196e-3eef-45c0-a82e-72aa1bb3cf8f.json"
               ]
@@ -173,14 +163,8 @@
         "url": {
           "raw": "https://artist-lineup-cdn.tomorrowland.com/stages-TL26BE-9205196e-3eef-45c0-a82e-72aa1bb3cf8f.json",
           "protocol": "https",
-          "host": [
-            "artist-lineup-cdn",
-            "tomorrowland",
-            "com"
-          ],
-          "path": [
-            "stages-TL26BE-9205196e-3eef-45c0-a82e-72aa1bb3cf8f.json"
-          ]
+          "host": ["artist-lineup-cdn", "tomorrowland", "com"],
+          "path": ["stages-TL26BE-9205196e-3eef-45c0-a82e-72aa1bb3cf8f.json"]
         }
       },
       "response": [
@@ -192,11 +176,7 @@
             "url": {
               "raw": "https://artist-lineup-cdn.tomorrowland.com/stages-TL26BE-9205196e-3eef-45c0-a82e-72aa1bb3cf8f.json",
               "protocol": "https",
-              "host": [
-                "artist-lineup-cdn",
-                "tomorrowland",
-                "com"
-              ],
+              "host": ["artist-lineup-cdn", "tomorrowland", "com"],
               "path": [
                 "stages-TL26BE-9205196e-3eef-45c0-a82e-72aa1bb3cf8f.json"
               ]
@@ -332,14 +312,8 @@
         "url": {
           "raw": "https://artist-lineup-cdn.tomorrowland.com/TL26BE-W1-9205196e-3eef-45c0-a82e-72aa1bb3cf8f.json",
           "protocol": "https",
-          "host": [
-            "artist-lineup-cdn",
-            "tomorrowland",
-            "com"
-          ],
-          "path": [
-            "TL26BE-W1-9205196e-3eef-45c0-a82e-72aa1bb3cf8f.json"
-          ]
+          "host": ["artist-lineup-cdn", "tomorrowland", "com"],
+          "path": ["TL26BE-W1-9205196e-3eef-45c0-a82e-72aa1bb3cf8f.json"]
         }
       },
       "response": [
@@ -351,14 +325,8 @@
             "url": {
               "raw": "https://artist-lineup-cdn.tomorrowland.com/TL26BE-W1-9205196e-3eef-45c0-a82e-72aa1bb3cf8f.json",
               "protocol": "https",
-              "host": [
-                "artist-lineup-cdn",
-                "tomorrowland",
-                "com"
-              ],
-              "path": [
-                "TL26BE-W1-9205196e-3eef-45c0-a82e-72aa1bb3cf8f.json"
-              ]
+              "host": ["artist-lineup-cdn", "tomorrowland", "com"],
+              "path": ["TL26BE-W1-9205196e-3eef-45c0-a82e-72aa1bb3cf8f.json"]
             }
           },
           "status": "OK",

@@ -45,7 +45,7 @@ function formatShootingPositions(positions?: string): string {
   if (!positions) return ''
   return positions
     .split('')
-    .map((p) => (p === 'P' ? 'Prone' : 'Standing'))
+    .map(p => (p === 'P' ? 'Prone' : 'Standing'))
     .join(' → ')
 }
 
@@ -104,10 +104,10 @@ function formatCompetitionDetails(competition: IBUCompetition): string {
 function formatStartListOrResults(
   results: IBUResult[],
   disciplineId: DisciplineId,
-  isStartList: boolean,
+  isStartList: boolean
 ): { title: string; content: string } | null {
   const isRelay = isRelayDiscipline(disciplineId)
-  const filtered = results.filter((r) => r.IsTeam === isRelay)
+  const filtered = results.filter(r => r.IsTeam === isRelay)
 
   if (filtered.length === 0) {
     return null
@@ -116,8 +116,8 @@ function formatStartListOrResults(
   if (isStartList) {
     // Filter out athletes without valid bib numbers (reserves/withdrawn)
     const withBib = filtered.filter(
-      (r) =>
-        r.Bib && r.Bib !== 'null' && !Number.isNaN(Number.parseInt(r.Bib, 10)),
+      r =>
+        r.Bib && r.Bib !== 'null' && !Number.isNaN(Number.parseInt(r.Bib, 10))
     )
 
     if (withBib.length === 0) {
@@ -126,11 +126,11 @@ function formatStartListOrResults(
 
     // Format as start list - sort by Bib number
     const sorted = [...withBib].sort(
-      (a, b) => Number.parseInt(a.Bib, 10) - Number.parseInt(b.Bib, 10),
+      (a, b) => Number.parseInt(a.Bib, 10) - Number.parseInt(b.Bib, 10)
     )
 
     const content = sorted
-      .map((r) => {
+      .map(r => {
         const name = isRelay ? r.ShortName : `${r.ShortName} (${r.Nat})`
         return `${r.Bib}. ${name}`
       })
@@ -147,7 +147,7 @@ function formatStartListOrResults(
   })
 
   const content = sorted
-    .map((r) => {
+    .map(r => {
       const name = isRelay ? r.ShortName : `${r.ShortName} (${r.Nat})`
       const time = r.TotalTime || 'DNF'
       // Skip rank number for DNF (no valid rank)
@@ -185,7 +185,7 @@ function competitionToIcsEvent(
   event: IBUEvent,
   resultsData: IBUResultsData | undefined,
   allCompetitions: IBUCompetition[],
-  allResults: Map<string, IBUResultsData>,
+  allResults: Map<string, IBUResultsData>
 ): IcsEvent {
   const isCompleted = competition.StatusId >= 10
   const emoji = isCompleted
@@ -206,7 +206,7 @@ function competitionToIcsEvent(
     const formatted = formatStartListOrResults(
       resultsData.results,
       competition.DisciplineId,
-      resultsData.isStartList,
+      resultsData.isStartList
     )
     if (formatted) {
       descriptionParts.push(`${formatted.title}:\n${formatted.content}`)
@@ -220,7 +220,7 @@ function competitionToIcsEvent(
     competition,
     resultsData?.results,
     allCompetitions,
-    allResults,
+    allResults
   )
   const endTime = new Date(startTime.getTime() + duration)
 
@@ -240,11 +240,11 @@ export function buildCalendar(
   events: IBUEvent[],
   competitions: Map<string, IBUCompetition[]>,
   results: Map<string, IBUResultsData>,
-  params: IBUQueryParams,
+  params: IBUQueryParams
 ): IcsCalendar {
   const icsEvents: IcsEvent[] = []
 
-  const wcEvents = events.filter((e) => e.Level === 1)
+  const wcEvents = events.filter(e => e.Level === 1)
 
   // Flatten all competitions for historical duration lookup
   const allCompetitions = [...competitions.values()].flat()
@@ -264,8 +264,8 @@ export function buildCalendar(
             event,
             resultsData,
             allCompetitions,
-            results,
-          ),
+            results
+          )
         )
       }
     }

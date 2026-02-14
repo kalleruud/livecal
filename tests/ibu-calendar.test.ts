@@ -11,7 +11,7 @@ import type {
 // Helper to create results data
 function resultsData(
   results: IBUResult[],
-  isStartList = false,
+  isStartList = false
 ): IBUResultsData {
   return { isStartList, results }
 }
@@ -472,7 +472,7 @@ describe('IBU Calendar Output', () => {
 
     // Competition URL
     expect(ics).toContain(
-      'URL:https://www.biathlonworld.com/results/BT2526SWRLCP01SWSP',
+      'URL:https://www.biathlonworld.com/results/BT2526SWRLCP01SWSP'
     )
   })
 })

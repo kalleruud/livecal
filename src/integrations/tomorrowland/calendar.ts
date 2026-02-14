@@ -21,9 +21,9 @@ function isUnpublishedTime(startTime: string, endTime: string): boolean {
 
 function performanceToIcsEvent(
   performance: TomorrowlandPerformance,
-  stageHost?: string,
+  stageHost?: string
 ): IcsEvent {
-  const artistNames = performance.artists.map((a) => a.name).join(', ')
+  const artistNames = performance.artists.map(a => a.name).join(', ')
   const startTime = parseDateTime(performance.startTime)
   const endTime = parseDateTime(performance.endTime)
 
@@ -63,27 +63,25 @@ function performanceToIcsEvent(
 
 function filterPerformances(
   performances: TomorrowlandPerformance[],
-  params: TomorrowlandQueryParams,
+  params: TomorrowlandQueryParams
 ): TomorrowlandPerformance[] {
   let filtered = performances
 
   if (params.artists && params.artists.length > 0) {
-    const artistFilters = params.artists.map((a) => a.toLowerCase())
-    filtered = filtered.filter((p) =>
+    const artistFilters = params.artists.map(a => a.toLowerCase())
+    filtered = filtered.filter(p =>
       artistFilters.some(
-        (filter) =>
+        filter =>
           p.name.toLowerCase().includes(filter) ||
-          p.artists.some((a) => a.name.toLowerCase().includes(filter)),
-      ),
+          p.artists.some(a => a.name.toLowerCase().includes(filter))
+      )
     )
   }
 
   if (params.stages && params.stages.length > 0) {
-    const stageFilters = params.stages.map((s) => s.toLowerCase())
-    filtered = filtered.filter((p) =>
-      stageFilters.some((filter) =>
-        p.stage.name.toLowerCase().includes(filter),
-      ),
+    const stageFilters = params.stages.map(s => s.toLowerCase())
+    filtered = filtered.filter(p =>
+      stageFilters.some(filter => p.stage.name.toLowerCase().includes(filter))
     )
   }
 
@@ -93,9 +91,9 @@ function filterPerformances(
 function getStageHost(
   stageId: string,
   date: string,
-  stages: TomorrowlandStageInfo[],
+  stages: TomorrowlandStageInfo[]
 ): string | undefined {
-  const stage = stages.find((s) => s.id === stageId)
+  const stage = stages.find(s => s.id === stageId)
   if (stage?.hosts[date]) {
     return stage.hosts[date]
   }
@@ -105,15 +103,15 @@ function getStageHost(
 export function buildCalendar(
   performances: TomorrowlandPerformance[],
   params: TomorrowlandQueryParams,
-  stages: TomorrowlandStageInfo[] = [],
+  stages: TomorrowlandStageInfo[] = []
 ): IcsCalendar {
   const filtered = filterPerformances(performances, params)
 
-  const icsEvents = filtered.map((performance) => {
+  const icsEvents = filtered.map(performance => {
     const stageHost = getStageHost(
       performance.stage.id,
       performance.date,
-      stages,
+      stages
     )
     return performanceToIcsEvent(performance, stageHost)
   })

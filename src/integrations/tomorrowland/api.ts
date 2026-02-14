@@ -12,14 +12,14 @@ const BASE_URL = 'https://artist-lineup-cdn.tomorrowland.com'
 const API_TOKEN = '9205196e-3eef-45c0-a82e-72aa1bb3cf8f'
 
 export async function fetchPerformances(
-  weekend: Weekend,
+  weekend: Weekend
 ): Promise<TomorrowlandPerformance[]> {
   const url = `${BASE_URL}/TL26BE-${weekend}-${API_TOKEN}.json`
 
   try {
     const response = await request<TomorrowlandApiResponse>(
       url,
-      `${TL_CONFIG.id}-fetchPerformances-${weekend}`,
+      `${TL_CONFIG.id}-fetchPerformances-${weekend}`
     )
     return response.performances
   } catch (error) {
@@ -34,7 +34,7 @@ export async function fetchStages(): Promise<TomorrowlandStageInfo[]> {
   try {
     const response = await request<TomorrowlandStagesResponse>(
       url,
-      `${TL_CONFIG.id}-fetchStages`,
+      `${TL_CONFIG.id}-fetchStages`
     )
     return response.stages
   } catch (error) {

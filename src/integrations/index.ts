@@ -11,7 +11,7 @@ export function getAllRoutes(): Array<{
   route: Route
   integration: IntegrationService
 }> {
-  return integrations.flatMap((integration) =>
-    integration.getRoutes().map((route) => ({ route, integration })),
+  return integrations.flatMap(integration =>
+    integration.getRoutes().map(route => ({ route, integration }))
   )
 }

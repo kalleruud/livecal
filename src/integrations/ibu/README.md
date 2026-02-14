@@ -13,6 +13,7 @@ Fetches data from [IBU Biathlon World Cup](https://www.biathlonworld.com/calenda
 - Fetches all competitions for each Event
 - Each competition is converted into a calendar event
 - Updates description with top 10 results when available
+- Calendar event URL links to start list for scheduled competitions, results page for completed ones
 - Event titles prefixed with emojis based on discipline and gender
 - Completed events marked with ✅
 
@@ -59,7 +60,10 @@ curl -H "Content-Type: application/json; charset=utf-8" \
 ## Generated Calendar Event URLs
 
 - **Event:** `https://www.biathlonworld.com/calendar?CupLevel=1&SeasonId=2526&EventId=BT2526SWRLCP06`
-- **Competition:** `https://www.biathlonworld.com/results/<CompetitionId>`
+- **Competition (Completed):** `https://www.biathlonworld.com/results/<RaceId>`
+- **Competition (Scheduled):** `https://www.biathlonworld.com/startlist/<RaceId>`
+
+Calendar events automatically use the appropriate URL based on competition status (completed vs scheduled).
 
 ## Emoji Mapping
 

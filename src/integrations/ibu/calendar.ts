@@ -168,6 +168,10 @@ function buildCompetitionUrl(competition: IBUCompetition): string {
   return `https://www.biathlonworld.com/results/${competition.RaceId}`
 }
 
+function buildStartListUrl(competition: IBUCompetition): string {
+  return `https://www.biathlonworld.com/startlist/${competition.RaceId}`
+}
+
 function eventToIcsEvent(event: IBUEvent): IcsEvent {
   return {
     uid: event.EventId,
@@ -224,6 +228,11 @@ function competitionToIcsEvent(
   )
   const endTime = new Date(startTime.getTime() + duration)
 
+  // Use start list URL for scheduled competitions, results URL for completed ones
+  const url = isCompleted
+    ? buildCompetitionUrl(competition)
+    : buildStartListUrl(competition)
+
   return {
     uid: competition.RaceId,
     stamp: { date: new Date() },
@@ -232,7 +241,7 @@ function competitionToIcsEvent(
     summary: `${emoji} ${competition.ShortDescription}`,
     description,
     location: `${competition.Location}, ${event.ShortDescription}`,
-    url: buildCompetitionUrl(competition),
+    url,
   }
 }
 

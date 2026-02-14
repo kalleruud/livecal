@@ -475,4 +475,51 @@ describe('IBU Calendar Output', () => {
       'URL:https://www.biathlonworld.com/results/BT2526SWRLCP01SWSP'
     )
   })
+
+  test('uses start list URL for scheduled competitions', () => {
+    const events = [mockEvent]
+    const competitions = new Map([
+      [mockEvent.EventId, [mockScheduledCompetition]],
+    ])
+
+    const calendar = buildCalendar(events, competitions, new Map(), {
+      includeEvents: false,
+      includeComps: true,
+    })
+
+    const ics = generateIcsCalendar(calendar)
+
+    // Should use start list URL for scheduled competition
+    expect(ics).toContain(
+      'URL:https://www.biathlonworld.com/startlist/BT2526SWRLCP01SWMS'
+    )
+    // Should NOT use results URL
+    expect(ics).not.toContain(
+      'URL:https://www.biathlonworld.com/results/BT2526SWRLCP01SWMS'
+    )
+  })
+
+  test('uses results URL for completed competitions', () => {
+    const events = [mockEvent]
+    const competitions = new Map([[mockEvent.EventId, [mockSprintCompetition]]])
+    const results = new Map([
+      [mockSprintCompetition.RaceId, resultsData(mockSprintResults)],
+    ])
+
+    const calendar = buildCalendar(events, competitions, results, {
+      includeEvents: false,
+      includeComps: true,
+    })
+
+    const ics = generateIcsCalendar(calendar)
+
+    // Should use results URL for completed competition
+    expect(ics).toContain(
+      'URL:https://www.biathlonworld.com/results/BT2526SWRLCP01SWSP'
+    )
+    // Should NOT use start list URL
+    expect(ics).not.toContain(
+      'URL:https://www.biathlonworld.com/startlist/BT2526SWRLCP01SWSP'
+    )
+  })
 })

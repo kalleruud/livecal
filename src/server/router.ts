@@ -32,6 +32,15 @@ async function loadTemplate(name: string): Promise<string> {
 	return Bun.file(path).text();
 }
 
+function escapeHtmlAttribute(str: string): string {
+	return str
+		.replace(/&/g, "&amp;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#39;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;");
+}
+
 async function renderEndpoints(host: string): Promise<string> {
 	const calendarRoutes = getCalendarRoutes();
 
@@ -46,7 +55,7 @@ async function renderEndpoints(host: string): Promise<string> {
 			const webcalUrl = `webcal://${host}${path}`;
 			const integration = routeToIntegration.get(path);
 			const params: ParamMetadata[] = integration?.paramMetadata || [];
-			const paramsJson = JSON.stringify(params);
+			const paramsJson = escapeHtmlAttribute(JSON.stringify(params));
 
 			return endpointTemplate
 				.replaceAll("{{PATH}}", path)

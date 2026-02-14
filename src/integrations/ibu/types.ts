@@ -59,6 +59,7 @@ export interface IBUResult {
   Nat: string
   Rank: string | null
   Bib: string
+  Leg?: number
   Shootings: string
   TotalTime: string | null
   Behind: string | null

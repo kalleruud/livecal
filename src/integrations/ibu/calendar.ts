@@ -131,8 +131,19 @@ function formatStartListOrResults(
 
     const content = sorted
       .map(r => {
-        const name = isRelay ? r.ShortName : `${r.ShortName} (${r.Nat})`
-        return `${r.Bib}. ${name}`
+        if (isRelay) {
+          // For teams, find and list the athletes
+          const athletes = results
+            .filter(athlete => !athlete.IsTeam && athlete.Bib === r.Bib)
+            .sort((a, b) => (a.Leg || 0) - (b.Leg || 0))
+            .map(athlete => athlete.ShortName)
+
+          if (athletes.length > 0) {
+            return `${r.Bib}. ${r.ShortName}\n   ${athletes.join(', ')}`
+          }
+          return `${r.Bib}. ${r.ShortName}`
+        }
+        return `${r.Bib}. ${r.ShortName} (${r.Nat})`
       })
       .join('\n')
     return { title: 'Start List', content }
@@ -148,13 +159,24 @@ function formatStartListOrResults(
 
   const content = sorted
     .map(r => {
-      const name = isRelay ? r.ShortName : `${r.ShortName} (${r.Nat})`
       const time = r.TotalTime || 'DNF'
       // Skip rank number for DNF (no valid rank)
-      if (!r.Rank || r.Rank === 'null') {
-        return `${name} - ${time}`
+      const rankPrefix = r.Rank && r.Rank !== 'null' ? `${r.Rank}. ` : ''
+
+      if (isRelay) {
+        // For teams, find and list the athletes
+        const athletes = results
+          .filter(athlete => !athlete.IsTeam && athlete.Bib === r.Bib)
+          .sort((a, b) => (a.Leg || 0) - (b.Leg || 0))
+          .map(athlete => athlete.ShortName)
+
+        if (athletes.length > 0) {
+          return `${rankPrefix}${r.ShortName} - ${time}\n   ${athletes.join(', ')}`
+        }
+        return `${rankPrefix}${r.ShortName} - ${time}`
       }
-      return `${r.Rank}. ${name} - ${time}`
+
+      return `${rankPrefix}${r.ShortName} (${r.Nat}) - ${time}`
     })
     .join('\n')
   return { title: 'Results', content }

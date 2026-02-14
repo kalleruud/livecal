@@ -1,18 +1,14 @@
 import tseslint from '@typescript-eslint/eslint-plugin'
 import tsparser from '@typescript-eslint/parser'
-import prettierConfig from 'eslint-config-prettier'
 import prettier from 'eslint-plugin-prettier'
 
 export default [
   {
-    ignores: ['node_modules/**', 'cache/**', '.husky/_/**'],
-  },
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    files: ['**/*.{ts,tsx}'],
     languageOptions: {
       parser: tsparser,
       parserOptions: {
-        ecmaVersion: 'latest',
+        ecmaVersion: 2020,
         sourceType: 'module',
       },
     },
@@ -20,18 +16,8 @@ export default [
       '@typescript-eslint': tseslint,
       prettier: prettier,
     },
-    rules: {
-      ...tseslint.configs.recommended.rules,
-      ...prettierConfig.rules,
-      'prettier/prettier': 'error',
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-        },
-      ],
-    },
+  },
+  {
+    ignores: ['node_modules/**', 'cache/**'],
   },
 ]

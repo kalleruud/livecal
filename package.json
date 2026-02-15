@@ -1,38 +1,38 @@
 {
-	"name": "livecal",
-	"version": "1.0.0",
-	"type": "module",
-	"scripts": {
-		"dev": "bun --hot src/index.ts",
-		"start": "bun src/index.ts",
-		"check": "eslint . && prettier -c .",
-		"format": "prettier -w ."
-	},
-	"dependencies": {
-		"croner": "^9.1.0",
-		"ts-ics": "^2.4.0"
-	},
-	"devDependencies": {
-		"@eslint/js": "^10.0.1",
-		"@types/bun": "^1.3.6",
-		"@typescript-eslint/eslint-plugin": "^8.55.0",
-		"@typescript-eslint/parser": "^8.55.0",
-		"eslint": "^10.0.0",
-		"eslint-config-prettier": "^10.1.8",
-		"eslint-plugin-prettier": "^5.5.5",
-		"prettier": "^3.8.1"
-	},
-	"prettier": {
-		"arrowParens": "avoid",
-		"endOfLine": "lf",
-		"jsxSingleQuote": true,
-		"semi": false,
-		"singleQuote": true,
-		"tabWidth": 2,
-		"trailingComma": "es5",
-		"useTabs": false,
-		"bracketSameLine": true
-	},
-	"module": "src/index.ts",
-	"private": true
+  "name": "livecal",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --hot src/index.ts",
+    "start": "bun src/index.ts",
+    "check": "eslint . && prettier -c .",
+    "format": "prettier -w ."
+  },
+  "dependencies": {
+    "croner": "^9.1.0",
+    "ts-ics": "^2.4.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/bun": "^1.3.6",
+    "@typescript-eslint/eslint-plugin": "^8.55.0",
+    "@typescript-eslint/parser": "^8.55.0",
+    "eslint": "^10.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "prettier": "^3.8.1"
+  },
+  "prettier": {
+    "arrowParens": "avoid",
+    "endOfLine": "lf",
+    "jsxSingleQuote": true,
+    "semi": false,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "es5",
+    "useTabs": false,
+    "bracketSameLine": true
+  },
+  "module": "src/index.ts",
+  "private": true
 }

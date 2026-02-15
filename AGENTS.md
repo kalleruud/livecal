@@ -20,13 +20,17 @@ Default to using Bun instead of Node.js.
 
 # Project Overview
 
-Livecal converts external APIs into webcal/ICS calendar subscriptions. Each external service is implemented as an "integration".
+Livecal converts external APIs into webcal/ICS calendar subscriptions. Each external service is implemented as a declarative "integration".
 
 ## Key Files
 
-- `src/integrations/interface.ts` - The `IntegrationService` interface all integrations implement
+- `src/integrations/framework/` - Declarative integration framework
+  - `types.ts` - `CalendarIntegration` type definition
+  - `params.ts` - Parameter schema types and validation
+  - `handlers.ts` - Route handlers (calendar, options endpoints)
+  - `register.ts` - `createIntegration()` factory function
 - `src/integrations/index.ts` - Registry where all integrations are registered
-- `src/server/cache.ts` - Disk caching for generated ICS files
+- `src/server/cache.ts` - Disk caching for API responses
 - `src/server/scheduler.ts` - CRON-based cache refresh
 
 ## Adding a New Integration
@@ -35,17 +39,62 @@ Livecal converts external APIs into webcal/ICS calendar subscriptions. Each exte
 2. Required files:
    - `types.ts` - TypeScript types for the external API responses
    - `api.ts` - Functions to fetch data from the external API
-   - `calendar.ts` - `buildCalendar()` function that creates an `IcsCalendar`
-   - `service.ts` - Class implementing `IntegrationService`
+   - `events.ts` - Pure functions to transform API data into `IcsEvent[]`
+   - `definition.ts` - Declarative integration using `createIntegration()`
    - `README.md` - Documentation for this integration
 3. Register in `src/integrations/index.ts`
 4. Add tests in `tests/{name}-calendar.test.ts`
 5. Update main `README.md` integrations table
 
+## Integration Definition
+
+Integrations are declarative - define **what** you need, not how to do it:
+
+```typescript
+import { createIntegration } from '../framework/index.ts'
+import { fetchData } from './api.ts'
+import { dataToEvent } from './events.ts'
+
+export default createIntegration<MyData, MyParams>({
+  id: 'myservice',
+  name: 'My Service',
+
+  calendar: {
+    prodId: '-//Livecal//My Service//EN',
+    name: 'My Service Calendar',
+  },
+
+  endpoint: 'calendar.ics',
+
+  params: {
+    filter: { type: 'text', label: 'Filter' },
+    category: {
+      type: 'select',
+      label: 'Category',
+      options: [{ value: 'all', label: 'All' }],
+    },
+    enabled: { type: 'checkbox', label: 'Enabled', default: true },
+  },
+
+  fetchData: async params => fetchData(params),
+  toEvents: (data, params) => data.map(dataToEvent),
+})
+```
+
+## Parameter Types
+
+| Type             | Description        | Key Options                           |
+| ---------------- | ------------------ | ------------------------------------- |
+| `text`           | Text input         | `required`, `placeholder`, `validate` |
+| `select`         | Single dropdown    | `required`, `options`, `validate`     |
+| `checkbox`       | Boolean toggle     | `default`                             |
+| `dynamic-select` | Async multi-select | `dependsOn`, `fetchOptions`           |
+
 ## Testing Guidelines
 
 - Tests should focus on the final ICS calendar output
-- Test the `buildCalendar()` function directly with mock data
+- Test the `toEvents()` function directly with mock data
+- Also test via the legacy `buildCalendar()` wrapper if present
 - Verify both the `IcsCalendar` object and generated ICS string
 - Test edge cases (empty results, DNFs, start lists vs results)
 
@@ -71,6 +120,6 @@ const icsString = generateIcsCalendar(calendar)
 
 ## Caching
 
-- Integrations should use `cache.get()` and `cache.set()` in their route handlers
-- Cache keys should be unique per parameter combination
+- API responses are cached automatically via `src/server/cache.ts`
+- Use the `request()` helper from cache.ts in your `api.ts` files
 - The scheduler auto-refreshes caches based on CRON schedule

@@ -1,89 +1,89 @@
-import { createCalendarHandler, createOptionsHandler } from "./handlers.ts";
-import type { CustomValidator, ParamDef, ParamSchema } from "./params.ts";
+import { createCalendarHandler, createOptionsHandler } from './handlers.ts'
+import type { CustomValidator, ParamDef, ParamSchema } from './params.ts'
 import type {
-	CalendarIntegration,
-	ParamMetadata,
-	RegisteredIntegration,
-	Route,
-} from "./types.ts";
+  CalendarIntegration,
+  ParamMetadata,
+  RegisteredIntegration,
+  Route,
+} from './types.ts'
 
 /**
  * Convert a param schema to UI metadata for the frontend.
  */
 function schemaToMetadata<TParams>(
-	schema: ParamSchema<TParams>,
-	basePath: string,
+  schema: ParamSchema<TParams>,
+  basePath: string
 ): ParamMetadata[] {
-	const metadata: ParamMetadata[] = [];
+  const metadata: ParamMetadata[] = []
 
-	for (const [name, def] of Object.entries(schema) as Array<
-		[string, ParamDef<TParams>]
-	>) {
-		switch (def.type) {
-			case "text":
-				metadata.push({
-					name,
-					label: def.label,
-					type: "text",
-					required: def.required,
-					defaultValue: def.default,
-					placeholder: def.placeholder,
-					description: def.description,
-				});
-				break;
+  for (const [name, def] of Object.entries(schema) as Array<
+    [string, ParamDef<TParams>]
+  >) {
+    switch (def.type) {
+      case 'text':
+        metadata.push({
+          name,
+          label: def.label,
+          type: 'text',
+          required: def.required,
+          defaultValue: def.default,
+          placeholder: def.placeholder,
+          description: def.description,
+        })
+        break
 
-			case "select":
-				metadata.push({
-					name,
-					label: def.label,
-					type: "select",
-					required: def.required,
-					defaultValue: def.default,
-					options: def.options,
-					description: def.description,
-				});
-				break;
+      case 'select':
+        metadata.push({
+          name,
+          label: def.label,
+          type: 'select',
+          required: def.required,
+          defaultValue: def.default,
+          options: def.options,
+          description: def.description,
+        })
+        break
 
-			case "checkbox":
-				metadata.push({
-					name,
-					label: def.label,
-					type: "checkbox",
-					defaultValue: def.default,
-					description: def.description,
-				});
-				break;
+      case 'checkbox':
+        metadata.push({
+          name,
+          label: def.label,
+          type: 'checkbox',
+          defaultValue: def.default,
+          description: def.description,
+        })
+        break
 
-			case "dynamic-select":
-				metadata.push({
-					name,
-					label: def.label,
-					type: "multi-select-dynamic",
-					placeholder: def.placeholder,
-					description: def.description,
-					optionsEndpoint: `${basePath}/options?field=${name}`,
-					dependsOn: def.dependsOn?.[0] as string | undefined,
-				});
-				break;
-		}
-	}
+      case 'dynamic-select':
+        metadata.push({
+          name,
+          label: def.label,
+          type: 'multi-select-dynamic',
+          placeholder: def.placeholder,
+          description: def.description,
+          optionsEndpoint: `${basePath}/options?field=${name}`,
+          dependsOn: def.dependsOn?.[0] as string | undefined,
+        })
+        break
+    }
+  }
 
-	return metadata;
+  return metadata
 }
 
 /**
  * Check if schema has any dynamic-select params that need an options endpoint.
  */
 function hasDynamicParams<TParams>(schema: ParamSchema<TParams>): boolean {
-	for (const def of Object.values(schema) as ParamDef<TParams>[]) {
-		if (def.type === "dynamic-select") return true;
-	}
-	return false;
+  for (const def of Object.values(schema) as ParamDef<TParams>[]) {
+    if (def.type === 'dynamic-select') return true
+  }
+  return false
 }
 
 export interface IntegrationOptions<TParams> {
-	/** Custom validation that runs after schema validation */
-	validate?: CustomValidator<TParams>;
+  /** Custom validation that runs after schema validation */
+  validate?: CustomValidator<TParams>
 }
 
 /**
@@ -109,32 +109,32 @@ export interface IntegrationOptions<TParams> {
  * ```
  */
 export function createIntegration<TData, TParams>(
-	definition: CalendarIntegration<TData, TParams>,
-	options?: IntegrationOptions<TParams>,
+  definition: CalendarIntegration<TData, TParams>,
+  options?: IntegrationOptions<TParams>
 ): RegisteredIntegration {
-	const basePath = `/api/${definition.id}`;
+  const basePath = `/api/${definition.id}`
 
-	const routes: Route[] = [
-		// Main calendar endpoint
-		{
-			path: `${basePath}/${definition.endpoint}`,
-			handler: createCalendarHandler(definition, options?.validate),
-		},
-	];
+  const routes: Route[] = [
+    // Main calendar endpoint
+    {
+      path: `${basePath}/${definition.endpoint}`,
+      handler: createCalendarHandler(definition, options?.validate),
+    },
+  ]
 
-	// Add options endpoint only if there are dynamic-select params
-	if (hasDynamicParams(definition.params)) {
-		routes.push({
-			path: `${basePath}/options`,
-			handler: createOptionsHandler(definition),
-		});
-	}
+  // Add options endpoint only if there are dynamic-select params
+  if (hasDynamicParams(definition.params)) {
+    routes.push({
+      path: `${basePath}/options`,
+      handler: createOptionsHandler(definition),
+    })
+  }
 
-	return {
-		id: definition.id,
-		name: definition.name,
-		basePath,
-		routes,
-		paramMetadata: schemaToMetadata(definition.params, basePath),
-	};
+  return {
+    id: definition.id,
+    name: definition.name,
+    basePath,
+    routes,
+    paramMetadata: schemaToMetadata(definition.params, basePath),
+  }
 }

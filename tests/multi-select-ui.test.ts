@@ -5,7 +5,8 @@ import {
   replaceChipsPreservingInput,
   toggleSelectedValue,
 } from '../src/static/multi-select.js'
-import { handleRequest } from '../src/server/router.ts'
+import tomorrowlandIntegration from '../src/integrations/tomorrowland/definition.ts'
+import { addRoute, handleRequest } from '../src/server/router.ts'
 
 describe('multi-select UI state', () => {
   test('keeps generic text input chrome off the nested search field', async () => {
@@ -36,6 +37,22 @@ describe('multi-select UI state', () => {
     expect(html).not.toContain(".querySelector('.chip-close')")
     expect(html).toMatch(/\.chip\s*{[^}]*cursor: pointer;/s)
     expect(html).toMatch(/\.chip-close\s*{[^}]*pointer-events: none;/s)
+  })
+
+  test('renders an integration description as helper text', async () => {
+    const calendarRoute = tomorrowlandIntegration.routes.find(route =>
+      route.path.endsWith('.ics')
+    )
+    if (!calendarRoute) throw new Error('Calendar route not found')
+
+    addRoute(calendarRoute, tomorrowlandIntegration)
+    const response = await handleRequest(new Request('http://localhost/'))
+    const html = await response.text()
+
+    expect(html).toContain('class="endpoint-description"')
+    expect(html).toContain(
+      'Selecting both artists and stages includes only performances matching at least one selected artist and at least one selected stage.'
+    )
   })
 
   test('arrow navigation wraps through the filtered options', () => {

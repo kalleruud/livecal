@@ -121,6 +121,7 @@ export default createIntegration<MyItem[], MyParams>({
   // Identity
   id: 'myservice',
   name: 'My Service',
+  description: 'Choose filters to customize this calendar.',
 
   // Calendar metadata
   calendar: {

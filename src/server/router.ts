@@ -56,11 +56,15 @@ async function renderEndpoints(host: string): Promise<string> {
       const integration = routeToIntegration.get(path)
       const params: ParamMetadata[] = integration?.paramMetadata || []
       const paramsJson = escapeHtmlAttribute(JSON.stringify(params))
+      const description = integration?.description
+        ? `<p class="endpoint-description">${escapeHtmlAttribute(integration.description)}</p>`
+        : ''
 
       return endpointTemplate
         .replaceAll('{{PATH}}', path)
         .replaceAll('{{WEBCAL_URL}}', webcalUrl)
         .replaceAll('{{PARAMS_JSON}}', paramsJson)
+        .replaceAll('{{DESCRIPTION}}', description)
     })
     .join('\n    ')
 }

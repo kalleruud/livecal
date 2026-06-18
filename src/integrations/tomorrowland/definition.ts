@@ -23,6 +23,8 @@ interface TomorrowlandParams {
 export default createIntegration<TomorrowlandData, TomorrowlandParams>({
   id: 'tomorrowland',
   name: 'Tomorrowland',
+  description:
+    'Selecting both artists and stages includes only performances matching at least one selected artist and at least one selected stage.',
 
   calendar: {
     prodId: '-//Livecal//Tomorrowland//EN',

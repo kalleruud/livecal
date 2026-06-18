@@ -4,6 +4,10 @@ The home page lists the available calendar subscriptions and renders controls
 from each integration's parameter metadata. Changes to the controls immediately
 update the displayed calendar endpoint and subscription URL.
 
+Integrations can provide optional helper text with the top-level `description`
+field. The home page displays it between the subscription URL and parameter
+controls. Descriptions are escaped before rendering.
+
 ## Dynamic Multi-Selects
 
 Dynamic multi-selects load their options after the field they depend on has a

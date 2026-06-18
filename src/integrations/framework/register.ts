@@ -95,6 +95,7 @@ export interface IntegrationOptions<TParams> {
  * export default createIntegration({
  *   id: 'myservice',
  *   name: 'My Service',
+ *   description: 'Choose filters to customize this calendar.',
  *   calendar: {
  *     prodId: '-//Livecal//My Service//EN',
  *     name: 'My Calendar',
@@ -133,6 +134,7 @@ export function createIntegration<TData, TParams>(
   return {
     id: definition.id,
     name: definition.name,
+    description: definition.description,
     basePath,
     routes,
     paramMetadata: schemaToMetadata(definition.params, basePath),

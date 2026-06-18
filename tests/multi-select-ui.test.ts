@@ -68,6 +68,13 @@ describe('multi-select UI state', () => {
     expect(html).toMatch(
       /\.multi-select-options\s*{[^}]*max-height: calc\(300px - 2\.5rem\);[^}]*overflow-y: scroll;/s
     )
+    expect(html).toMatch(/\.param\s*{[^}]*min-width: 0;/s)
+    expect(html).toMatch(
+      /\.multi-select-container\s*{[^}]*min-width: 0;[^}]*max-width: 100%;/s
+    )
+    expect(html).toMatch(
+      /\.multi-select-chips\s*{[^}]*min-width: 0;[^}]*max-width: 100%;[^}]*overflow: hidden;/s
+    )
     expect(html).toMatch(
       /\.multi-select-selected\s*{[^}]*overscroll-behavior-x: contain;[^}]*touch-action: pan-x;/s
     )

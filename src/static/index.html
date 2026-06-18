@@ -100,9 +100,11 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        min-width: 0;
       }
       .param label {
         color: #888;
+        flex-shrink: 0;
       }
       select,
       input[type='text']:not(.multi-select-input) {
@@ -121,6 +123,8 @@
         flex-direction: column;
         gap: 0.25rem;
         flex: 1;
+        min-width: 0;
+        max-width: 100%;
         position: relative;
       }
       .multi-select-chips {
@@ -132,6 +136,9 @@
         background: #1e1e1e;
         border: 1px solid #333;
         border-radius: 4px;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
         padding: 0.25rem;
       }
       .multi-select-chips.focused {

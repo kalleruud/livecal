@@ -63,7 +63,7 @@ describe('multi-select UI state', () => {
       /code\s*{[^}]*min-width: 0;[^}]*overflow-x: auto;[^}]*white-space: nowrap;/s
     )
     expect(html).toMatch(
-      /\.multi-select-chips\s*{[^}]*max-height: 6rem;[^}]*overflow-x: hidden;[^}]*overflow-y: scroll;/s
+      /\.multi-select-chips\s*{[^}]*box-sizing: border-box;[^}]*height: 2\.5rem;[^}]*overflow-x: hidden;[^}]*overflow-y: scroll;/s
     )
     expect(html).toMatch(
       /\.multi-select-dropdown\s*{[^}]*max-height: 300px;[^}]*overflow-y: scroll;/s
@@ -73,6 +73,14 @@ describe('multi-select UI state', () => {
     )
     expect(html).toMatch(
       /\.multi-select-chips::\-webkit-scrollbar,\s*\.multi-select-dropdown::\-webkit-scrollbar\s*{[^}]*display: none;/s
+    )
+  })
+
+  test('clears the search term after toggling an option', async () => {
+    const html = await Bun.file('src/static/index.html').text()
+
+    expect(html).toMatch(
+      /function toggleOption\(opt\)\s*{[^}]*searchInput\.value = ''[^}]*renderDropdown\(''\)/s
     )
   })
 

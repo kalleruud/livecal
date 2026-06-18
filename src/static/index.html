@@ -127,8 +127,8 @@
         display: flex;
         flex-wrap: wrap;
         gap: 0.25rem;
-        min-height: 1.5rem;
-        max-height: 6rem;
+        box-sizing: border-box;
+        height: 2.5rem;
         align-items: center;
         align-content: flex-start;
         background: #1e1e1e;
@@ -448,8 +448,9 @@
               function toggleOption(opt) {
                 toggleSelectedValue(selectedValues, opt.value)
                 hiddenInput.value = Array.from(selectedValues).join(',')
+                searchInput.value = ''
                 renderChips()
-                renderDropdown(searchInput.value, false)
+                renderDropdown('')
                 updateUrl()
               }
 

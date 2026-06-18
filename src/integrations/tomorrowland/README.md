@@ -46,6 +46,8 @@ Returns available artists and stages for a given weekend to populate multi-selec
 
 The web interface provides searchable multi-select dropdowns for artists and stages, populated dynamically based on the selected weekend. Options are fetched from the `/api/tomorrowland/options` endpoint when a weekend is selected, and selections are automatically updated in the subscription URL.
 
+Selecting multiple artists or stages matches any selected value within that filter. When both artists and stages are selected, only performances matching a selected artist and a selected stage are included.
+
 ## Calendar Events
 
 Each performance creates a calendar event with:

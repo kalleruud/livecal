@@ -36,13 +36,40 @@
         align-items: center;
         gap: 1rem;
         margin-bottom: 0.75rem;
+        min-width: 0;
+      }
+      .url-view {
+        background: #1e1e1e;
+        border-radius: 4px;
+        display: flex;
+        flex: 1;
+        min-width: 0;
       }
       code {
-        background: #1e1e1e;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
         flex: 1;
         font-size: 0.9rem;
+        min-width: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 0.25rem 0.5rem;
+        white-space: nowrap;
+      }
+      .copy-link {
+        align-self: stretch;
+        background: transparent;
+        border: 0;
+        border-left: 1px solid #333;
+        color: #66b3ff;
+        cursor: pointer;
+        flex-shrink: 0;
+        font: inherit;
+        padding: 0.25rem 0.5rem;
+      }
+      .copy-link:hover,
+      .copy-link:focus-visible {
+        background: #66b3ff;
+        color: #121212;
+        outline: none;
       }
       a {
         color: #66b3ff;
@@ -50,6 +77,14 @@
         padding: 0.25rem 0.5rem;
         border: 1px solid currentColor;
         border-radius: 4px;
+      }
+      .subscribe-link {
+        flex-shrink: 0;
+      }
+      .endpoint-description {
+        font-size: 0.8rem;
+        line-height: 1.4;
+        margin: -0.25rem 0 0.75rem;
       }
       a:hover {
         background: #66b3ff;
@@ -65,12 +100,14 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        min-width: 0;
       }
       .param label {
         color: #888;
+        flex-shrink: 0;
       }
       select,
-      input[type='text'] {
+      input[type='text']:not(.multi-select-input) {
         background: #1e1e1e;
         border: 1px solid #333;
         border-radius: 4px;
@@ -86,22 +123,36 @@
         flex-direction: column;
         gap: 0.25rem;
         flex: 1;
+        min-width: 0;
+        max-width: 100%;
         position: relative;
       }
       .multi-select-chips {
         display: flex;
-        flex-wrap: wrap;
         gap: 0.25rem;
-        min-height: 1.5rem;
+        box-sizing: border-box;
+        height: 2.5rem;
         align-items: center;
         background: #1e1e1e;
         border: 1px solid #333;
         border-radius: 4px;
-        padding: 0.25rem 0.5rem;
-        cursor: text;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        padding: 0.25rem;
       }
       .multi-select-chips.focused {
         border-color: #66b3ff;
+      }
+      .multi-select-selected {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        gap: 0.25rem;
+        height: 100%;
+        min-width: 0;
+        overflow-x: scroll;
+        overflow-y: hidden;
       }
       .chip {
         background: #66b3ff;
@@ -109,34 +160,74 @@
         padding: 0.25rem 0.5rem;
         border-radius: 3px;
         display: flex;
+        flex: none;
         align-items: center;
+        justify-content: flex-start;
         gap: 0.5rem;
         font-size: 0.75rem;
+        cursor: pointer;
+        min-width: 0;
+        width: fit-content;
+        max-width: 100%;
+      }
+      .chip-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       .chip-close {
-        cursor: pointer;
         font-weight: bold;
         opacity: 0.7;
+        pointer-events: none;
       }
-      .chip-close:hover {
+      .chip:hover .chip-close {
         opacity: 1;
       }
+      .multi-select-placeholder {
+        color: #888;
+        font-size: 0.75rem;
+        overflow: hidden;
+        padding: 0.25rem 0.5rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
       .multi-select-input {
-        background: transparent;
+        background: #1e1e1e;
         border: none;
+        border-bottom: 1px solid #333;
         color: #e0e0e0;
         font-size: 0.85rem;
         outline: none;
-        flex: 1;
-        min-width: 100px;
-        padding: 0;
+        padding: 0.5rem;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .multi-select-add {
+        align-items: center;
+        align-self: stretch;
+        background: transparent;
+        border: 0;
+        border-left: 1px solid #333;
+        color: #66b3ff;
+        cursor: pointer;
+        display: flex;
+        flex: none;
+        font-size: 1.25rem;
+        justify-content: center;
+        padding: 0 0.5rem;
+      }
+      .multi-select-add:hover,
+      .multi-select-add:focus-visible {
+        background: #66b3ff;
+        color: #121212;
+        outline: none;
       }
       .multi-select-dropdown {
         background: #1e1e1e;
         border: 1px solid #333;
         border-radius: 4px;
-        max-height: 150px;
-        overflow-y: auto;
+        max-height: 300px;
+        overflow: hidden;
         position: absolute;
         top: 100%;
         left: 0;
@@ -144,6 +235,28 @@
         width: 100%;
         z-index: 1000;
         margin-top: 0.25rem;
+      }
+      .multi-select-options {
+        max-height: calc(300px - 2.5rem);
+        overflow-y: scroll;
+      }
+      .multi-select-selected {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+        overscroll-behavior-x: contain;
+        touch-action: pan-x;
+      }
+      .multi-select-options {
+        -ms-overflow-style: none;
+        overscroll-behavior-y: contain;
+        scrollbar-width: none;
+        touch-action: pan-y;
+      }
+      .multi-select-selected::-webkit-scrollbar,
+      .multi-select-options::-webkit-scrollbar {
+        display: none;
+        height: 0;
+        width: 0;
       }
       .multi-select-option {
         padding: 0.5rem;
@@ -153,6 +266,10 @@
       }
       .multi-select-option:hover {
         background: #333;
+      }
+      .multi-select-option.active {
+        outline: 2px solid #e0e0e0;
+        outline-offset: -2px;
       }
       .multi-select-option.selected {
         background: #66b3ff;
@@ -187,13 +304,23 @@
     <ul>
       {{ENDPOINTS}}
     </ul>
-    <script>
+    <script type="module">
+      import {
+        buildHttpCalendarUrl,
+        getNextOptionIndex,
+        resolveActiveOptionIndex,
+        toggleSelectedValue,
+      } from '/static/multi-select.js'
+
+      let multiSelectCount = 0
+
       document.querySelectorAll('.endpoint').forEach(endpoint => {
         const basePath = endpoint.dataset.path
         const paramsJson = endpoint.dataset.params
         const paramsContainer = endpoint.querySelector('.params')
         const link = endpoint.querySelector('.subscribe-link')
         const code = endpoint.querySelector('code')
+        const copyButton = endpoint.querySelector('.copy-link')
 
         // Parse parameter metadata
         const paramMetadata = paramsJson ? JSON.parse(paramsJson) : []
@@ -263,6 +390,16 @@
               const chipsContainer = document.createElement('div')
               chipsContainer.className = 'multi-select-chips'
 
+              const selectedContainer = document.createElement('div')
+              selectedContainer.className = 'multi-select-selected'
+
+              const addButton = document.createElement('button')
+              addButton.type = 'button'
+              addButton.className = 'multi-select-add'
+              addButton.textContent = '+'
+              addButton.setAttribute('aria-label', `Add ${param.label}`)
+              addButton.setAttribute('aria-expanded', 'false')
+
               const hiddenInput = document.createElement('input')
               hiddenInput.type = 'hidden'
               hiddenInput.name = param.name
@@ -271,14 +408,29 @@
               searchInput.type = 'text'
               searchInput.className = 'multi-select-input'
               searchInput.placeholder = param.placeholder || 'Search...'
+              searchInput.setAttribute('role', 'combobox')
+              searchInput.setAttribute('aria-autocomplete', 'list')
+              searchInput.setAttribute('aria-expanded', 'false')
               if (param.description) searchInput.title = param.description
 
               const dropdown = document.createElement('div')
               dropdown.className = 'multi-select-dropdown'
               dropdown.style.display = 'none'
 
+              const optionsContainer = document.createElement('div')
+              optionsContainer.className = 'multi-select-options'
+              optionsContainer.setAttribute('role', 'listbox')
+              optionsContainer.setAttribute('aria-multiselectable', 'true')
+
+              const componentId = `multi-select-${multiSelectCount++}`
+              optionsContainer.id = `${componentId}-listbox`
+              searchInput.setAttribute('aria-controls', optionsContainer.id)
+              addButton.setAttribute('aria-controls', optionsContainer.id)
+
               const selectedValues = new Set()
               let allOptions = []
+              let filteredOptions = []
+              let activeOptionIndex = -1
               let lastDependencyValue = null
 
               // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
@@ -300,13 +452,13 @@
                 }
 
                 if (!dependencyValue) {
-                  dropdown.innerHTML = `<div class="multi-select-empty">Select ${param.dependsOn || 'a filter'} first</div>`
+                  optionsContainer.innerHTML = `<div class="multi-select-empty">Select ${param.dependsOn || 'a filter'} first</div>`
                   allOptions = []
                   return
                 }
 
                 lastDependencyValue = dependencyValue
-                dropdown.innerHTML =
+                optionsContainer.innerHTML =
                   '<div class="multi-select-loading">Loading...</div>'
 
                 try {
@@ -328,7 +480,7 @@
 
                   renderDropdown('')
                 } catch (_error) {
-                  dropdown.innerHTML =
+                  optionsContainer.innerHTML =
                     '<div class="multi-select-error">Error loading options</div>'
                   allOptions = []
                 }
@@ -343,35 +495,88 @@
               }
 
               // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
-              function renderDropdown(searchTerm) {
-                const filtered = filterOptions(searchTerm)
-                dropdown.innerHTML = ''
+              function updateActiveOption(preservedScrollTop) {
+                const optionElements = optionsContainer.querySelectorAll(
+                  '.multi-select-option'
+                )
+                optionElements.forEach(option =>
+                  option.classList.remove('active')
+                )
 
-                if (filtered.length === 0) {
-                  dropdown.innerHTML =
+                const activeOption = optionElements[activeOptionIndex]
+                if (!activeOption) {
+                  searchInput.removeAttribute('aria-activedescendant')
+                  return
+                }
+
+                activeOption.classList.add('active')
+                searchInput.setAttribute(
+                  'aria-activedescendant',
+                  activeOption.id
+                )
+                if (preservedScrollTop === undefined) {
+                  activeOption.scrollIntoView({ block: 'nearest' })
+                } else {
+                  optionsContainer.scrollTop = preservedScrollTop
+                }
+              }
+
+              // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
+              function toggleOption(opt) {
+                const previousScrollTop = optionsContainer.scrollTop
+
+                toggleSelectedValue(selectedValues, opt.value)
+                hiddenInput.value = Array.from(selectedValues).join(',')
+                searchInput.value = ''
+                renderChips()
+                renderDropdown('', false, opt.value, previousScrollTop)
+                updateUrl()
+              }
+
+              // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
+              function renderDropdown(
+                searchTerm,
+                resetActive = true,
+                activeValue,
+                preservedScrollTop
+              ) {
+                filteredOptions = filterOptions(searchTerm)
+                optionsContainer.innerHTML = ''
+
+                activeOptionIndex = resolveActiveOptionIndex(
+                  filteredOptions,
+                  activeOptionIndex,
+                  resetActive,
+                  activeValue
+                )
+
+                if (filteredOptions.length === 0) {
+                  optionsContainer.innerHTML =
                     '<div class="multi-select-empty">No options found</div>'
                 } else {
-                  filtered.forEach(opt => {
+                  filteredOptions.forEach((opt, index) => {
                     const optionEl = document.createElement('div')
                     optionEl.className = 'multi-select-option'
+                    optionEl.id = `${componentId}-option-${index}`
+                    optionEl.setAttribute('role', 'option')
+                    optionEl.setAttribute(
+                      'aria-selected',
+                      String(selectedValues.has(opt.value))
+                    )
                     if (selectedValues.has(opt.value)) {
                       optionEl.classList.add('selected')
                     }
                     optionEl.textContent = opt.label
                     optionEl.addEventListener('click', () => {
-                      if (selectedValues.has(opt.value)) {
-                        selectedValues.delete(opt.value)
-                      } else {
-                        selectedValues.add(opt.value)
-                      }
-                      hiddenInput.value = Array.from(selectedValues).join(',')
-                      renderChips()
-                      renderDropdown(searchInput.value)
-                      updateUrl()
+                      activeOptionIndex = index
+                      toggleOption(opt)
+                      searchInput.focus()
                     })
-                    dropdown.appendChild(optionEl)
+                    optionsContainer.appendChild(optionEl)
                   })
                 }
+
+                updateActiveOption(preservedScrollTop)
               }
 
               // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
@@ -379,51 +584,96 @@
                 const chipsContent = Array.from(selectedValues).map(value => {
                   const chipEl = document.createElement('div')
                   chipEl.className = 'chip'
-                  chipEl.innerHTML = `${value}<span class="chip-close">×</span>`
-                  chipEl
-                    .querySelector('.chip-close')
-                    .addEventListener('click', e => {
-                      e.stopPropagation()
-                      selectedValues.delete(value)
-                      hiddenInput.value = Array.from(selectedValues).join(',')
-                      renderChips()
-                      renderDropdown(searchInput.value)
-                      updateUrl()
-                    })
+                  chipEl.title = `Remove ${value}`
+
+                  const chipLabel = document.createElement('span')
+                  chipLabel.className = 'chip-label'
+                  chipLabel.textContent = value
+
+                  const chipClose = document.createElement('span')
+                  chipClose.className = 'chip-close'
+                  chipClose.textContent = '×'
+
+                  chipEl.appendChild(chipLabel)
+                  chipEl.appendChild(chipClose)
+                  chipEl.addEventListener('mousedown', e => e.preventDefault())
+                  chipEl.addEventListener('click', e => {
+                    e.stopPropagation()
+                    const previousScrollTop = optionsContainer.scrollTop
+                    toggleSelectedValue(selectedValues, value)
+                    hiddenInput.value = Array.from(selectedValues).join(',')
+                    renderChips()
+                    renderDropdown(
+                      searchInput.value,
+                      false,
+                      value,
+                      previousScrollTop
+                    )
+                    updateUrl()
+                  })
                   return chipEl
                 })
 
-                // Rebuild chipsContainer
-                while (chipsContainer.firstChild) {
-                  chipsContainer.removeChild(chipsContainer.firstChild)
+                if (chipsContent.length === 0) {
+                  const placeholder = document.createElement('span')
+                  placeholder.className = 'multi-select-placeholder'
+                  placeholder.textContent = 'None selected'
+                  selectedContainer.replaceChildren(placeholder)
+                } else {
+                  selectedContainer.replaceChildren(...chipsContent)
                 }
-                for (const chip of chipsContent) {
-                  chipsContainer.appendChild(chip)
-                }
-                chipsContainer.appendChild(searchInput)
               }
 
-              chipsContainer.addEventListener('click', () => {
-                searchInput.focus()
-              })
-
-              searchInput.addEventListener('focus', async () => {
+              // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
+              async function openDropdown() {
                 await fetchOptions()
                 dropdown.style.display = 'block'
                 chipsContainer.classList.add('focused')
-              })
+                searchInput.setAttribute('aria-expanded', 'true')
+                addButton.setAttribute('aria-expanded', 'true')
+                searchInput.focus()
+              }
+
+              addButton.addEventListener('click', openDropdown)
 
               searchInput.addEventListener('blur', () => {
                 setTimeout(() => {
+                  if (document.activeElement === searchInput) return
+
                   dropdown.style.display = 'none'
                   chipsContainer.classList.remove('focused')
+                  searchInput.setAttribute('aria-expanded', 'false')
+                  addButton.setAttribute('aria-expanded', 'false')
+                  searchInput.removeAttribute('aria-activedescendant')
                   searchInput.value = ''
                   renderDropdown('')
                 }, 200)
               })
 
+              dropdown.addEventListener('mousedown', event => {
+                if (event.target !== searchInput) event.preventDefault()
+              })
+
               searchInput.addEventListener('input', e => {
                 renderDropdown(e.target.value)
+              })
+
+              searchInput.addEventListener('keydown', event => {
+                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                  event.preventDefault()
+                  activeOptionIndex = getNextOptionIndex(
+                    activeOptionIndex,
+                    filteredOptions.length,
+                    event.key === 'ArrowDown' ? 1 : -1
+                  )
+                  updateActiveOption()
+                  return
+                }
+
+                if (event.key === 'Enter' && activeOptionIndex >= 0) {
+                  event.preventDefault()
+                  toggleOption(filteredOptions[activeOptionIndex])
+                }
               })
 
               // Fetch options when dependency changes
@@ -451,6 +701,11 @@
 
               container.appendChild(chipsContainer)
               container.appendChild(dropdown)
+              chipsContainer.appendChild(selectedContainer)
+              chipsContainer.appendChild(addButton)
+              dropdown.appendChild(searchInput)
+              dropdown.appendChild(optionsContainer)
+              renderChips()
 
               paramDiv.appendChild(label)
               paramDiv.appendChild(container)
@@ -490,6 +745,54 @@
           link.href = webcalUrl
           code.textContent = fullPath
         }
+
+        function copyWithTextarea(text) {
+          try {
+            const textarea = document.createElement('textarea')
+            textarea.value = text
+            textarea.style.position = 'fixed'
+            textarea.style.opacity = '0'
+            document.body.appendChild(textarea)
+            textarea.focus()
+            textarea.select()
+            textarea.setSelectionRange(0, textarea.value.length)
+            const copied = document.execCommand('copy')
+            textarea.remove()
+            return copied
+          } catch (_error) {
+            return false
+          }
+        }
+
+        async function copyHttpUrl() {
+          const httpUrl = buildHttpCalendarUrl(
+            location.origin,
+            code.textContent
+          )
+          let copied = copyWithTextarea(httpUrl)
+
+          if (navigator.clipboard?.writeText) {
+            try {
+              await Promise.race([
+                navigator.clipboard.writeText(httpUrl),
+                new Promise((_, reject) =>
+                  setTimeout(() => reject(new Error('Clipboard timeout')), 500)
+                ),
+              ])
+              copied = true
+            } catch (_error) {
+              // Keep the synchronous fallback result.
+            }
+          }
+
+          copyButton.textContent = copied ? 'Copied' : 'Copy failed'
+
+          setTimeout(() => {
+            copyButton.textContent = 'Copy'
+          }, 1500)
+        }
+
+        copyButton.addEventListener('click', copyHttpUrl)
 
         inputs.forEach(input => {
           input.addEventListener('change', updateUrl)

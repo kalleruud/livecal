@@ -56,11 +56,15 @@ async function renderEndpoints(host: string): Promise<string> {
       const integration = routeToIntegration.get(path)
       const params: ParamMetadata[] = integration?.paramMetadata || []
       const paramsJson = escapeHtmlAttribute(JSON.stringify(params))
+      const description = integration?.description
+        ? `<p class="endpoint-description">${escapeHtmlAttribute(integration.description)}</p>`
+        : ''
 
       return endpointTemplate
         .replaceAll('{{PATH}}', path)
         .replaceAll('{{WEBCAL_URL}}', webcalUrl)
         .replaceAll('{{PARAMS_JSON}}', paramsJson)
+        .replaceAll('{{DESCRIPTION}}', description)
     })
     .join('\n    ')
 }
@@ -73,6 +77,13 @@ async function renderHomePage(host: string): Promise<string> {
 
 export async function handleRequest(req: Request): Promise<Response> {
   const url = new URL(req.url)
+
+  if (url.pathname === '/static/multi-select.js') {
+    const script = await loadTemplate('multi-select.js')
+    return new Response(script, {
+      headers: { 'Content-Type': 'text/javascript; charset=utf-8' },
+    })
+  }
 
   if (url.pathname === '/') {
     const html = await renderHomePage(url.host)

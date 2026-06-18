@@ -14,6 +14,7 @@ A minimal server that converts external APIs into webcal/ICS calendar subscripti
 
 - Disk caching with configurable CRON-based refresh
 - Integration-specific query parameters for customization
+- Webcal subscriptions with copyable HTTP(S) calendar URLs
 - Emoji prefixes for event types
 - Completed events marked with ✅
 
@@ -26,6 +27,7 @@ Feature specifications live in the `docs/` folder.
 | [Server & Routing](docs/server.md) | HTTP server and request routing |
 | [Caching](docs/cache.md)           | Disk-based response caching     |
 | [Scheduler](docs/scheduler.md)     | CRON-based cache refresh        |
+| [Web UI](docs/web-ui.md)           | Subscription form interactions  |
 
 ## Integrations
 
@@ -120,6 +122,7 @@ export default createIntegration<MyItem[], MyParams>({
   // Identity
   id: 'myservice',
   name: 'My Service',
+  description: 'Choose filters to customize this calendar.',
 
   // Calendar metadata
   calendar: {

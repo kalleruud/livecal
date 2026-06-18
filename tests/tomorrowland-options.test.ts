@@ -115,6 +115,12 @@ describe('Tomorrowland Integration - Options Endpoint', () => {
     expect(stageParam?.dependsOn).toBe('weekend')
   })
 
+  test('describes how artist and stage filters combine', () => {
+    expect(tomorrowlandIntegration.description).toBe(
+      'Selecting both artists and stages includes only performances matching at least one selected artist and at least one selected stage.'
+    )
+  })
+
   test('artist options should be unique', async () => {
     const optionsRoute = tomorrowlandIntegration.routes.find(r =>
       r.path.endsWith('/options')

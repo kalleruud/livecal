@@ -14,6 +14,9 @@ export interface CalendarIntegration<TData, TParams> {
   /** Human-readable name for the integration */
   name: string
 
+  /** Optional helper text displayed with the integration in the web UI */
+  description?: string
+
   /** Calendar metadata for ICS output */
   calendar: {
     /** ICS PRODID field, e.g. '-//Livecal//My Service//EN' */
@@ -42,6 +45,7 @@ export interface CalendarIntegration<TData, TParams> {
 export interface RegisteredIntegration {
   id: string
   name: string
+  description?: string
   basePath: string
   routes: Route[]
   paramMetadata: ParamMetadata[]

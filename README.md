@@ -26,6 +26,7 @@ Feature specifications live in the `docs/` folder.
 | [Server & Routing](docs/server.md) | HTTP server and request routing |
 | [Caching](docs/cache.md)           | Disk-based response caching     |
 | [Scheduler](docs/scheduler.md)     | CRON-based cache refresh        |
+| [Web UI](docs/web-ui.md)           | Subscription form interactions  |
 
 ## Integrations
 

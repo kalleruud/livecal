@@ -154,6 +154,10 @@
       .multi-select-option:hover {
         background: #333;
       }
+      .multi-select-option.active {
+        outline: 2px solid #e0e0e0;
+        outline-offset: -2px;
+      }
       .multi-select-option.selected {
         background: #66b3ff;
         color: #121212;
@@ -187,7 +191,16 @@
     <ul>
       {{ENDPOINTS}}
     </ul>
-    <script>
+    <script type="module">
+      import {
+        getNextOptionIndex,
+        getRenderedOptionIndex,
+        replaceChipsPreservingInput,
+        toggleSelectedValue,
+      } from '/static/multi-select.js'
+
+      let multiSelectCount = 0
+
       document.querySelectorAll('.endpoint').forEach(endpoint => {
         const basePath = endpoint.dataset.path
         const paramsJson = endpoint.dataset.params
@@ -271,14 +284,25 @@
               searchInput.type = 'text'
               searchInput.className = 'multi-select-input'
               searchInput.placeholder = param.placeholder || 'Search...'
+              searchInput.setAttribute('role', 'combobox')
+              searchInput.setAttribute('aria-autocomplete', 'list')
+              searchInput.setAttribute('aria-expanded', 'false')
               if (param.description) searchInput.title = param.description
 
               const dropdown = document.createElement('div')
               dropdown.className = 'multi-select-dropdown'
               dropdown.style.display = 'none'
+              dropdown.setAttribute('role', 'listbox')
+              dropdown.setAttribute('aria-multiselectable', 'true')
+
+              const componentId = `multi-select-${multiSelectCount++}`
+              dropdown.id = `${componentId}-listbox`
+              searchInput.setAttribute('aria-controls', dropdown.id)
 
               const selectedValues = new Set()
               let allOptions = []
+              let filteredOptions = []
+              let activeOptionIndex = -1
               let lastDependencyValue = null
 
               // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
@@ -343,35 +367,75 @@
               }
 
               // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
-              function renderDropdown(searchTerm) {
-                const filtered = filterOptions(searchTerm)
+              function updateActiveOption() {
+                const optionElements = dropdown.querySelectorAll(
+                  '.multi-select-option'
+                )
+                optionElements.forEach(option =>
+                  option.classList.remove('active')
+                )
+
+                const activeOption = optionElements[activeOptionIndex]
+                if (!activeOption) {
+                  searchInput.removeAttribute('aria-activedescendant')
+                  return
+                }
+
+                activeOption.classList.add('active')
+                searchInput.setAttribute(
+                  'aria-activedescendant',
+                  activeOption.id
+                )
+                activeOption.scrollIntoView({ block: 'nearest' })
+              }
+
+              // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
+              function toggleOption(opt) {
+                toggleSelectedValue(selectedValues, opt.value)
+                hiddenInput.value = Array.from(selectedValues).join(',')
+                renderChips()
+                renderDropdown(searchInput.value, false)
+                updateUrl()
+              }
+
+              // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
+              function renderDropdown(searchTerm, resetActive = true) {
+                filteredOptions = filterOptions(searchTerm)
                 dropdown.innerHTML = ''
 
-                if (filtered.length === 0) {
+                activeOptionIndex = getRenderedOptionIndex(
+                  activeOptionIndex,
+                  filteredOptions.length,
+                  resetActive
+                )
+
+                if (filteredOptions.length === 0) {
                   dropdown.innerHTML =
                     '<div class="multi-select-empty">No options found</div>'
                 } else {
-                  filtered.forEach(opt => {
+                  filteredOptions.forEach((opt, index) => {
                     const optionEl = document.createElement('div')
                     optionEl.className = 'multi-select-option'
+                    optionEl.id = `${componentId}-option-${index}`
+                    optionEl.setAttribute('role', 'option')
+                    optionEl.setAttribute(
+                      'aria-selected',
+                      String(selectedValues.has(opt.value))
+                    )
                     if (selectedValues.has(opt.value)) {
                       optionEl.classList.add('selected')
                     }
                     optionEl.textContent = opt.label
                     optionEl.addEventListener('click', () => {
-                      if (selectedValues.has(opt.value)) {
-                        selectedValues.delete(opt.value)
-                      } else {
-                        selectedValues.add(opt.value)
-                      }
-                      hiddenInput.value = Array.from(selectedValues).join(',')
-                      renderChips()
-                      renderDropdown(searchInput.value)
-                      updateUrl()
+                      activeOptionIndex = index
+                      toggleOption(opt)
+                      searchInput.focus()
                     })
                     dropdown.appendChild(optionEl)
                   })
                 }
+
+                updateActiveOption()
               }
 
               // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
@@ -382,25 +446,25 @@
                   chipEl.innerHTML = `${value}<span class="chip-close">×</span>`
                   chipEl
                     .querySelector('.chip-close')
+                    .addEventListener('mousedown', e => e.preventDefault())
+                  chipEl
+                    .querySelector('.chip-close')
                     .addEventListener('click', e => {
                       e.stopPropagation()
-                      selectedValues.delete(value)
+                      toggleSelectedValue(selectedValues, value)
                       hiddenInput.value = Array.from(selectedValues).join(',')
                       renderChips()
-                      renderDropdown(searchInput.value)
+                      renderDropdown(searchInput.value, false)
                       updateUrl()
                     })
                   return chipEl
                 })
 
-                // Rebuild chipsContainer
-                while (chipsContainer.firstChild) {
-                  chipsContainer.removeChild(chipsContainer.firstChild)
-                }
-                for (const chip of chipsContent) {
-                  chipsContainer.appendChild(chip)
-                }
-                chipsContainer.appendChild(searchInput)
+                replaceChipsPreservingInput(
+                  chipsContainer,
+                  searchInput,
+                  chipsContent
+                )
               }
 
               chipsContainer.addEventListener('click', () => {
@@ -411,19 +475,46 @@
                 await fetchOptions()
                 dropdown.style.display = 'block'
                 chipsContainer.classList.add('focused')
+                searchInput.setAttribute('aria-expanded', 'true')
               })
 
               searchInput.addEventListener('blur', () => {
                 setTimeout(() => {
+                  if (document.activeElement === searchInput) return
+
                   dropdown.style.display = 'none'
                   chipsContainer.classList.remove('focused')
+                  searchInput.setAttribute('aria-expanded', 'false')
+                  searchInput.removeAttribute('aria-activedescendant')
                   searchInput.value = ''
                   renderDropdown('')
                 }, 200)
               })
 
+              dropdown.addEventListener('mousedown', event => {
+                event.preventDefault()
+              })
+
               searchInput.addEventListener('input', e => {
                 renderDropdown(e.target.value)
+              })
+
+              searchInput.addEventListener('keydown', event => {
+                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                  event.preventDefault()
+                  activeOptionIndex = getNextOptionIndex(
+                    activeOptionIndex,
+                    filteredOptions.length,
+                    event.key === 'ArrowDown' ? 1 : -1
+                  )
+                  updateActiveOption()
+                  return
+                }
+
+                if (event.key === 'Enter' && activeOptionIndex >= 0) {
+                  event.preventDefault()
+                  toggleOption(filteredOptions[activeOptionIndex])
+                }
               })
 
               // Fetch options when dependency changes
@@ -451,6 +542,7 @@
 
               container.appendChild(chipsContainer)
               container.appendChild(dropdown)
+              chipsContainer.appendChild(searchInput)
 
               paramDiv.appendChild(label)
               paramDiv.appendChild(container)

@@ -74,6 +74,13 @@ async function renderHomePage(host: string): Promise<string> {
 export async function handleRequest(req: Request): Promise<Response> {
   const url = new URL(req.url)
 
+  if (url.pathname === '/static/multi-select.js') {
+    const script = await loadTemplate('multi-select.js')
+    return new Response(script, {
+      headers: { 'Content-Type': 'text/javascript; charset=utf-8' },
+    })
+  }
+
   if (url.pathname === '/') {
     const html = await renderHomePage(url.host)
     return new Response(html, {

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "bun --hot src/index.ts",
     "start": "bun src/index.ts",
+    "build": "bun build src/index.ts --target bun --outfile dist/index.js",
     "lint": "eslint .",
     "check": "eslint . && prettier -c .",
     "format": "prettier -w ."

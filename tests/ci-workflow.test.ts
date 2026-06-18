@@ -16,6 +16,7 @@ describe('CI workflow', () => {
     expect(workflow).toContain('pull_request:')
     expect(workflow).toContain('- main')
     expect(workflow).toContain('push:')
+    expect(workflow).toContain('uses: actions/checkout@v5')
     expect(workflow).toContain('uses: oven-sh/setup-bun@v2')
     expect(workflow).toContain('run: bun install --frozen-lockfile')
     expect(workflow).toContain('run: bun run check')

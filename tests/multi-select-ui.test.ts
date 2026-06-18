@@ -3,7 +3,7 @@ import {
   buildHttpCalendarUrl,
   getNextOptionIndex,
   getRenderedOptionIndex,
-  replaceChipsPreservingInput,
+  resolveActiveOptionIndex,
   toggleSelectedValue,
 } from '../src/static/multi-select.js'
 import tomorrowlandIntegration from '../src/integrations/tomorrowland/definition.ts'
@@ -52,7 +52,7 @@ describe('multi-select UI state', () => {
 
     expect(html).toContain("input[type='text']:not(.multi-select-input)")
     expect(html).toMatch(
-      /\.multi-select-input\s*{[^}]*background: transparent;[^}]*border: none;/s
+      /\.multi-select-input\s*{[^}]*background: #1e1e1e;[^}]*border: none;[^}]*border-bottom: 1px solid #333;/s
     )
   })
 
@@ -63,24 +63,45 @@ describe('multi-select UI state', () => {
       /code\s*{[^}]*min-width: 0;[^}]*overflow-x: auto;[^}]*white-space: nowrap;/s
     )
     expect(html).toMatch(
-      /\.multi-select-chips\s*{[^}]*box-sizing: border-box;[^}]*height: 2\.5rem;[^}]*overflow-x: hidden;[^}]*overflow-y: scroll;/s
+      /\.multi-select-selected\s*{[^}]*align-items: center;[^}]*overflow-x: scroll;[^}]*overflow-y: hidden;/s
     )
     expect(html).toMatch(
-      /\.multi-select-dropdown\s*{[^}]*max-height: 300px;[^}]*overflow-y: scroll;/s
+      /\.multi-select-options\s*{[^}]*max-height: calc\(300px - 2\.5rem\);[^}]*overflow-y: scroll;/s
     )
     expect(html).toMatch(
-      /\.multi-select-chips,\s*\.multi-select-dropdown\s*{[^}]*overscroll-behavior-y: contain;[^}]*scrollbar-width: none;[^}]*touch-action: pan-y;/s
+      /\.multi-select-selected\s*{[^}]*overscroll-behavior-x: contain;[^}]*touch-action: pan-x;/s
     )
     expect(html).toMatch(
-      /\.multi-select-chips::\-webkit-scrollbar,\s*\.multi-select-dropdown::\-webkit-scrollbar\s*{[^}]*display: none;/s
+      /\.multi-select-options\s*{[^}]*overscroll-behavior-y: contain;[^}]*touch-action: pan-y;/s
     )
+    expect(html).toMatch(
+      /\.chip\s*{[^}]*justify-content: flex-start;[^}]*width: fit-content;[^}]*max-width: 100%;/s
+    )
+    expect(html).toMatch(
+      /\.multi-select-selected::\-webkit-scrollbar,\s*\.multi-select-options::\-webkit-scrollbar\s*{[^}]*display: none;/s
+    )
+  })
+
+  test('places search in the dropdown and opens it with an add button', async () => {
+    const html = await Bun.file('src/static/index.html').text()
+
+    expect(html).toContain("addButton.textContent = '+'")
+    expect(html).toContain("addButton.addEventListener('click', openDropdown)")
+    expect(html).toContain(
+      "addButton.setAttribute('aria-controls', optionsContainer.id)"
+    )
+    expect(html).toMatch(
+      /dropdown\.appendChild\(searchInput\)[^]*dropdown\.appendChild\(optionsContainer\)/
+    )
+    expect(html).not.toContain('chipsContainer.appendChild(searchInput)')
+    expect(html).toContain("placeholder.className = 'multi-select-placeholder'")
   })
 
   test('clears the search term after toggling an option', async () => {
     const html = await Bun.file('src/static/index.html').text()
 
     expect(html).toMatch(
-      /function toggleOption\(opt\)\s*{[^}]*searchInput\.value = ''[^}]*renderDropdown\(''\)/s
+      /function toggleOption\(opt\)\s*{[^}]*activeOption\.offsetTop - optionsContainer\.scrollTop[^}]*searchInput\.value = ''[^}]*renderDropdown\('', false, opt\.value, activeOffset\)/s
     )
   })
 
@@ -123,6 +144,17 @@ describe('multi-select UI state', () => {
     expect(getRenderedOptionIndex(0, 0, true)).toBe(-1)
   })
 
+  test('keeps the toggled option highlighted after clearing search', () => {
+    const options = [
+      { value: 'A Little Sound' },
+      { value: 'A.N.I.' },
+      { value: 'Adrián Mills' },
+    ]
+
+    expect(resolveActiveOptionIndex(options, 0, false, 'Adrián Mills')).toBe(2)
+    expect(resolveActiveOptionIndex(options, 2, false, 'Missing')).toBe(2)
+  })
+
   test('enter-style toggling selects and deselects the same option', () => {
     const selectedValues = new Set<string>()
 
@@ -131,37 +163,6 @@ describe('multi-select UI state', () => {
 
     expect(toggleSelectedValue(selectedValues, 'Tiësto')).toBe(false)
     expect(selectedValues.has('Tiësto')).toBe(false)
-  })
-
-  test('repeated chip renders preserve the focused search input', () => {
-    const searchInput = { id: 'search' }
-    const oldChip = { id: 'old-chip' }
-    const firstChip = { id: 'first-chip' }
-    const secondChip = { id: 'second-chip' }
-    const children = [oldChip, searchInput]
-    let searchInputWasRemoved = false
-
-    const chipsContainer = {
-      get firstChild() {
-        return children[0]
-      },
-      removeChild(child: object) {
-        if (child === searchInput) searchInputWasRemoved = true
-        children.splice(children.indexOf(child), 1)
-      },
-      insertBefore(child: object, reference: object) {
-        children.splice(children.indexOf(reference), 0, child)
-      },
-    }
-
-    replaceChipsPreservingInput(chipsContainer, searchInput, [firstChip])
-    replaceChipsPreservingInput(chipsContainer, searchInput, [
-      firstChip,
-      secondChip,
-    ])
-
-    expect(searchInputWasRemoved).toBe(false)
-    expect(children).toEqual([firstChip, secondChip, searchInput])
   })
 
   test('serves the browser helper module', async () => {

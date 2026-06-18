@@ -22,6 +22,22 @@ export function getRenderedOptionIndex(currentIndex, optionCount, resetActive) {
   return Math.min(currentIndex, optionCount - 1)
 }
 
+export function resolveActiveOptionIndex(
+  options,
+  currentIndex,
+  resetActive,
+  activeValue
+) {
+  if (activeValue !== undefined) {
+    const matchingIndex = options.findIndex(
+      option => option.value === activeValue
+    )
+    if (matchingIndex >= 0) return matchingIndex
+  }
+
+  return getRenderedOptionIndex(currentIndex, options.length, resetActive)
+}
+
 export function toggleSelectedValue(selectedValues, value) {
   if (selectedValues.has(value)) {
     selectedValues.delete(value)
@@ -30,21 +46,4 @@ export function toggleSelectedValue(selectedValues, value) {
 
   selectedValues.add(value)
   return true
-}
-
-export function replaceChipsPreservingInput(
-  chipsContainer,
-  searchInput,
-  chips
-) {
-  while (
-    chipsContainer.firstChild &&
-    chipsContainer.firstChild !== searchInput
-  ) {
-    chipsContainer.removeChild(chipsContainer.firstChild)
-  }
-
-  for (const chip of chips) {
-    chipsContainer.insertBefore(chip, searchInput)
-  }
 }

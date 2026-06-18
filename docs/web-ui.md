@@ -14,14 +14,15 @@ Dynamic multi-selects load their options after the field they depend on has a
 value. For example, the Tomorrowland artist and stage lists load after selecting
 a weekend.
 
-The dropdown remains open while options are selected or deselected. Selected
-values are displayed as removable chips; clicking anywhere on a chip removes
-it. The search field remains focused so several values can be chosen in
-succession. Large selections are contained in a vertically scrollable single-row
-chip area so they do not expand the calendar card. The chip area and options
-dropdown support wheel and touch scrolling while keeping their scrollbar
-indicators hidden. Selecting or deselecting an option clears the current search
-term and restores the full options list.
+The `+` button opens the dropdown and focuses its search field. The search field
+stays fixed at the top while the options scroll beneath it. Selecting or
+deselecting an option clears the current search term, restores the full options
+list, and keeps the toggled option highlighted at the same viewport position.
+
+Selected values are displayed as non-wrapping removable chips in a single row;
+clicking anywhere on a chip removes it. Overflowing selections scroll
+horizontally, the dropdown options scroll vertically, and both keep their
+scrollbar indicators hidden while still supporting wheel and touch scrolling.
 
 Generated calendar endpoint URLs stay on one line and can be scrolled
 horizontally when the selected filters make them wider than the available card.

@@ -488,7 +488,7 @@
               }
 
               // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
-              function updateActiveOption(activeOffset) {
+              function updateActiveOption(preservedScrollTop) {
                 const optionElements = optionsContainer.querySelectorAll(
                   '.multi-select-option'
                 )
@@ -507,28 +507,22 @@
                   'aria-activedescendant',
                   activeOption.id
                 )
-                if (activeOffset === undefined) {
+                if (preservedScrollTop === undefined) {
                   activeOption.scrollIntoView({ block: 'nearest' })
                 } else {
-                  optionsContainer.scrollTop =
-                    activeOption.offsetTop - activeOffset
+                  optionsContainer.scrollTop = preservedScrollTop
                 }
               }
 
               // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
               function toggleOption(opt) {
-                const activeOption = optionsContainer.querySelector(
-                  '.multi-select-option.active'
-                )
-                const activeOffset = activeOption
-                  ? activeOption.offsetTop - optionsContainer.scrollTop
-                  : undefined
+                const previousScrollTop = optionsContainer.scrollTop
 
                 toggleSelectedValue(selectedValues, opt.value)
                 hiddenInput.value = Array.from(selectedValues).join(',')
                 searchInput.value = ''
                 renderChips()
-                renderDropdown('', false, opt.value, activeOffset)
+                renderDropdown('', false, opt.value, previousScrollTop)
                 updateUrl()
               }
 
@@ -537,7 +531,7 @@
                 searchTerm,
                 resetActive = true,
                 activeValue,
-                activeOffset
+                preservedScrollTop
               ) {
                 filteredOptions = filterOptions(searchTerm)
                 optionsContainer.innerHTML = ''
@@ -575,7 +569,7 @@
                   })
                 }
 
-                updateActiveOption(activeOffset)
+                updateActiveOption(preservedScrollTop)
               }
 
               // biome-ignore lint/correctness/noInnerDeclarations: Functions need access to closure variables
@@ -598,10 +592,16 @@
                   chipEl.addEventListener('mousedown', e => e.preventDefault())
                   chipEl.addEventListener('click', e => {
                     e.stopPropagation()
+                    const previousScrollTop = optionsContainer.scrollTop
                     toggleSelectedValue(selectedValues, value)
                     hiddenInput.value = Array.from(selectedValues).join(',')
                     renderChips()
-                    renderDropdown(searchInput.value, false, value)
+                    renderDropdown(
+                      searchInput.value,
+                      false,
+                      value,
+                      previousScrollTop
+                    )
                     updateUrl()
                   })
                   return chipEl

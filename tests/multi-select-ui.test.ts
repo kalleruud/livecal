@@ -101,8 +101,18 @@ describe('multi-select UI state', () => {
     const html = await Bun.file('src/static/index.html').text()
 
     expect(html).toMatch(
-      /function toggleOption\(opt\)\s*{[^}]*activeOption\.offsetTop - optionsContainer\.scrollTop[^}]*searchInput\.value = ''[^}]*renderDropdown\('', false, opt\.value, activeOffset\)/s
+      /function toggleOption\(opt\)\s*{[^}]*const previousScrollTop = optionsContainer\.scrollTop[^}]*searchInput\.value = ''[^}]*renderDropdown\('', false, opt\.value, previousScrollTop\)/s
     )
+  })
+
+  test('preserves dropdown scroll position while rerendering selections', async () => {
+    const html = await Bun.file('src/static/index.html').text()
+
+    expect(html).toContain('function updateActiveOption(preservedScrollTop)')
+    expect(html).toContain(
+      "if (preservedScrollTop === undefined) {\n                  activeOption.scrollIntoView({ block: 'nearest' })"
+    )
+    expect(html).toContain('optionsContainer.scrollTop = preservedScrollTop')
   })
 
   test('makes the entire selected chip removable', async () => {

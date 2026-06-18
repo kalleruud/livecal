@@ -36,6 +36,7 @@
         align-items: center;
         gap: 1rem;
         margin-bottom: 0.75rem;
+        min-width: 0;
       }
       code {
         background: #1e1e1e;
@@ -43,6 +44,10 @@
         border-radius: 4px;
         flex: 1;
         font-size: 0.9rem;
+        min-width: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
       }
       a {
         color: #66b3ff;
@@ -50,6 +55,9 @@
         padding: 0.25rem 0.5rem;
         border: 1px solid currentColor;
         border-radius: 4px;
+      }
+      .subscribe-link {
+        flex-shrink: 0;
       }
       a:hover {
         background: #66b3ff;
@@ -93,12 +101,16 @@
         flex-wrap: wrap;
         gap: 0.25rem;
         min-height: 1.5rem;
+        max-height: 6rem;
         align-items: center;
+        align-content: flex-start;
         background: #1e1e1e;
         border: 1px solid #333;
         border-radius: 4px;
         padding: 0.25rem 0.5rem;
         cursor: text;
+        overflow-x: hidden;
+        overflow-y: auto;
       }
       .multi-select-chips.focused {
         border-color: #66b3ff;
@@ -135,7 +147,7 @@
         background: #1e1e1e;
         border: 1px solid #333;
         border-radius: 4px;
-        max-height: 150px;
+        max-height: 300px;
         overflow-y: auto;
         position: absolute;
         top: 100%;

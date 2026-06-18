@@ -17,6 +17,18 @@ describe('multi-select UI state', () => {
     )
   })
 
+  test('constrains long URLs and large selections to scrollable areas', async () => {
+    const html = await Bun.file('src/static/index.html').text()
+
+    expect(html).toMatch(
+      /code\s*{[^}]*min-width: 0;[^}]*overflow-x: auto;[^}]*white-space: nowrap;/s
+    )
+    expect(html).toMatch(
+      /\.multi-select-chips\s*{[^}]*max-height: 6rem;[^}]*overflow-x: hidden;[^}]*overflow-y: auto;/s
+    )
+    expect(html).toMatch(/\.multi-select-dropdown\s*{[^}]*max-height: 300px;/s)
+  })
+
   test('arrow navigation wraps through the filtered options', () => {
     expect(getNextOptionIndex(-1, 3, 1)).toBe(0)
     expect(getNextOptionIndex(0, 3, -1)).toBe(2)

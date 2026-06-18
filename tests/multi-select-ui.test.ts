@@ -8,6 +8,15 @@ import {
 import { handleRequest } from '../src/server/router.ts'
 
 describe('multi-select UI state', () => {
+  test('keeps generic text input chrome off the nested search field', async () => {
+    const html = await Bun.file('src/static/index.html').text()
+
+    expect(html).toContain("input[type='text']:not(.multi-select-input)")
+    expect(html).toMatch(
+      /\.multi-select-input\s*{[^}]*background: transparent;[^}]*border: none;/s
+    )
+  })
+
   test('arrow navigation wraps through the filtered options', () => {
     expect(getNextOptionIndex(-1, 3, 1)).toBe(0)
     expect(getNextOptionIndex(0, 3, -1)).toBe(2)

@@ -25,9 +25,17 @@ describe('multi-select UI state', () => {
       /code\s*{[^}]*min-width: 0;[^}]*overflow-x: auto;[^}]*white-space: nowrap;/s
     )
     expect(html).toMatch(
-      /\.multi-select-chips\s*{[^}]*max-height: 6rem;[^}]*overflow-x: hidden;[^}]*overflow-y: auto;/s
+      /\.multi-select-chips\s*{[^}]*max-height: 6rem;[^}]*overflow-x: hidden;[^}]*overflow-y: scroll;/s
     )
-    expect(html).toMatch(/\.multi-select-dropdown\s*{[^}]*max-height: 300px;/s)
+    expect(html).toMatch(
+      /\.multi-select-dropdown\s*{[^}]*max-height: 300px;[^}]*overflow-y: scroll;/s
+    )
+    expect(html).toMatch(
+      /\.multi-select-chips,\s*\.multi-select-dropdown\s*{[^}]*overscroll-behavior-y: contain;[^}]*scrollbar-width: none;[^}]*touch-action: pan-y;/s
+    )
+    expect(html).toMatch(
+      /\.multi-select-chips::\-webkit-scrollbar,\s*\.multi-select-dropdown::\-webkit-scrollbar\s*{[^}]*display: none;/s
+    )
   })
 
   test('makes the entire selected chip removable', async () => {

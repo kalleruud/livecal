@@ -115,7 +115,7 @@
         padding: 0.25rem 0.5rem;
         cursor: text;
         overflow-x: hidden;
-        overflow-y: auto;
+        overflow-y: scroll;
       }
       .multi-select-chips.focused {
         border-color: #66b3ff;
@@ -154,7 +154,7 @@
         border: 1px solid #333;
         border-radius: 4px;
         max-height: 300px;
-        overflow-y: auto;
+        overflow-y: scroll;
         position: absolute;
         top: 100%;
         left: 0;
@@ -162,6 +162,19 @@
         width: 100%;
         z-index: 1000;
         margin-top: 0.25rem;
+      }
+      .multi-select-chips,
+      .multi-select-dropdown {
+        -ms-overflow-style: none;
+        overscroll-behavior-y: contain;
+        scrollbar-width: none;
+        touch-action: pan-y;
+      }
+      .multi-select-chips::-webkit-scrollbar,
+      .multi-select-dropdown::-webkit-scrollbar {
+        display: none;
+        height: 0;
+        width: 0;
       }
       .multi-select-option {
         padding: 0.5rem;

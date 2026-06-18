@@ -124,13 +124,14 @@
         align-items: center;
         gap: 0.5rem;
         font-size: 0.75rem;
+        cursor: pointer;
       }
       .chip-close {
-        cursor: pointer;
         font-weight: bold;
         opacity: 0.7;
+        pointer-events: none;
       }
-      .chip-close:hover {
+      .chip:hover .chip-close {
         opacity: 1;
       }
       .multi-select-input {
@@ -455,20 +456,18 @@
                 const chipsContent = Array.from(selectedValues).map(value => {
                   const chipEl = document.createElement('div')
                   chipEl.className = 'chip'
+                  chipEl.title = `Remove ${value}`
                   chipEl.innerHTML = `${value}<span class="chip-close">×</span>`
-                  chipEl
-                    .querySelector('.chip-close')
-                    .addEventListener('mousedown', e => e.preventDefault())
-                  chipEl
-                    .querySelector('.chip-close')
-                    .addEventListener('click', e => {
-                      e.stopPropagation()
-                      toggleSelectedValue(selectedValues, value)
-                      hiddenInput.value = Array.from(selectedValues).join(',')
-                      renderChips()
-                      renderDropdown(searchInput.value, false)
-                      updateUrl()
-                    })
+                  chipEl.addEventListener('mousedown', e => e.preventDefault())
+                  chipEl.addEventListener('click', e => {
+                    e.stopPropagation()
+                    toggleSelectedValue(selectedValues, value)
+                    hiddenInput.value = Array.from(selectedValues).join(',')
+                    renderChips()
+                    renderDropdown(searchInput.value, false)
+                    updateUrl()
+                    searchInput.focus()
+                  })
                   return chipEl
                 })
 

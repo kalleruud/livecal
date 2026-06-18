@@ -11,10 +11,10 @@ value. For example, the Tomorrowland artist and stage lists load after selecting
 a weekend.
 
 The dropdown remains open while options are selected or deselected. Selected
-values are displayed as removable chips, and the current search text remains in
-place so several matching values can be chosen in succession. Large selections
-are contained in a vertically scrollable chip area so they do not expand the
-calendar card indefinitely.
+values are displayed as removable chips; clicking anywhere on a chip removes
+it. The current search text remains in place so several matching values can be
+chosen in succession. Large selections are contained in a vertically scrollable
+chip area so they do not expand the calendar card indefinitely.
 
 Generated calendar endpoint URLs stay on one line and can be scrolled
 horizontally when the selected filters make them wider than the available card.

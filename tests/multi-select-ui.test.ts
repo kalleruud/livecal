@@ -29,6 +29,15 @@ describe('multi-select UI state', () => {
     expect(html).toMatch(/\.multi-select-dropdown\s*{[^}]*max-height: 300px;/s)
   })
 
+  test('makes the entire selected chip removable', async () => {
+    const html = await Bun.file('src/static/index.html').text()
+
+    expect(html).toContain("chipEl.addEventListener('click'")
+    expect(html).not.toContain(".querySelector('.chip-close')")
+    expect(html).toMatch(/\.chip\s*{[^}]*cursor: pointer;/s)
+    expect(html).toMatch(/\.chip-close\s*{[^}]*pointer-events: none;/s)
+  })
+
   test('arrow navigation wraps through the filtered options', () => {
     expect(getNextOptionIndex(-1, 3, 1)).toBe(0)
     expect(getNextOptionIndex(0, 3, -1)).toBe(2)

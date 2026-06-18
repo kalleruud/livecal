@@ -14,6 +14,7 @@ A minimal server that converts external APIs into webcal/ICS calendar subscripti
 
 - Disk caching with configurable CRON-based refresh
 - Integration-specific query parameters for customization
+- Webcal subscriptions with copyable HTTP(S) calendar URLs
 - Emoji prefixes for event types
 - Completed events marked with ✅
 

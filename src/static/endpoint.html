@@ -1,6 +1,16 @@
 <li class="endpoint" data-path="{{PATH}}" data-params="{{PARAMS_JSON}}">
   <div class="endpoint-header">
-    <code>{{PATH}}</code>
+    <div class="url-view">
+      <code>{{PATH}}</code>
+      <button
+        type="button"
+        class="copy-link"
+        aria-label="Copy HTTP calendar URL"
+        aria-live="polite"
+        title="Copy HTTP calendar URL">
+        Copy
+      </button>
+    </div>
     <a href="{{WEBCAL_URL}}" class="subscribe-link">Subscribe</a>
   </div>
   {{DESCRIPTION}}

@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import {
+  buildHttpCalendarUrl,
   getNextOptionIndex,
   getRenderedOptionIndex,
   replaceChipsPreservingInput,
@@ -9,6 +10,43 @@ import tomorrowlandIntegration from '../src/integrations/tomorrowland/definition
 import { addRoute, handleRequest } from '../src/server/router.ts'
 
 describe('multi-select UI state', () => {
+  test('builds an absolute HTTP calendar URL with current filters', () => {
+    expect(
+      buildHttpCalendarUrl(
+        'https://livecal.example',
+        '/api/tomorrowland/lineup.ics?weekend=W1&artists=Alesso'
+      )
+    ).toBe(
+      'https://livecal.example/api/tomorrowland/lineup.ics?weekend=W1&artists=Alesso'
+    )
+    expect(
+      buildHttpCalendarUrl('http://localhost:6699', '/api/ibu/wc.ics')
+    ).toBe('http://localhost:6699/api/ibu/wc.ics')
+  })
+
+  test('renders a copy control inside each URL view', async () => {
+    const template = await Bun.file('src/static/endpoint.html').text()
+
+    expect(template).toMatch(
+      /<div class="url-view">[\s\S]*<code>{{PATH}}<\/code>[\s\S]*class="copy-link"/
+    )
+    expect(template).toContain('aria-label="Copy HTTP calendar URL"')
+    expect(template).toContain('aria-live="polite"')
+  })
+
+  test('bounds clipboard writes and retains a synchronous fallback', async () => {
+    const html = await Bun.file('src/static/index.html').text()
+
+    expect(html).toContain('function copyWithTextarea(text)')
+    expect(html).toContain('textarea.focus()')
+    expect(html).toContain(
+      'textarea.setSelectionRange(0, textarea.value.length)'
+    )
+    expect(html).toContain('navigator.clipboard?.writeText')
+    expect(html).toContain("new Error('Clipboard timeout')")
+    expect(html).toContain("copied ? 'Copied' : 'Copy failed'")
+  })
+
   test('keeps generic text input chrome off the nested search field', async () => {
     const html = await Bun.file('src/static/index.html').text()
 

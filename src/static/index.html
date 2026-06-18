@@ -38,16 +38,38 @@
         margin-bottom: 0.75rem;
         min-width: 0;
       }
-      code {
+      .url-view {
         background: #1e1e1e;
-        padding: 0.25rem 0.5rem;
         border-radius: 4px;
+        display: flex;
+        flex: 1;
+        min-width: 0;
+      }
+      code {
         flex: 1;
         font-size: 0.9rem;
         min-width: 0;
         overflow-x: auto;
         overflow-y: hidden;
+        padding: 0.25rem 0.5rem;
         white-space: nowrap;
+      }
+      .copy-link {
+        align-self: stretch;
+        background: transparent;
+        border: 0;
+        border-left: 1px solid #333;
+        color: #66b3ff;
+        cursor: pointer;
+        flex-shrink: 0;
+        font: inherit;
+        padding: 0.25rem 0.5rem;
+      }
+      .copy-link:hover,
+      .copy-link:focus-visible {
+        background: #66b3ff;
+        color: #121212;
+        outline: none;
       }
       a {
         color: #66b3ff;
@@ -224,6 +246,7 @@
     </ul>
     <script type="module">
       import {
+        buildHttpCalendarUrl,
         getNextOptionIndex,
         getRenderedOptionIndex,
         replaceChipsPreservingInput,
@@ -238,6 +261,7 @@
         const paramsContainer = endpoint.querySelector('.params')
         const link = endpoint.querySelector('.subscribe-link')
         const code = endpoint.querySelector('code')
+        const copyButton = endpoint.querySelector('.copy-link')
 
         // Parse parameter metadata
         const paramMetadata = paramsJson ? JSON.parse(paramsJson) : []
@@ -611,6 +635,54 @@
           link.href = webcalUrl
           code.textContent = fullPath
         }
+
+        function copyWithTextarea(text) {
+          try {
+            const textarea = document.createElement('textarea')
+            textarea.value = text
+            textarea.style.position = 'fixed'
+            textarea.style.opacity = '0'
+            document.body.appendChild(textarea)
+            textarea.focus()
+            textarea.select()
+            textarea.setSelectionRange(0, textarea.value.length)
+            const copied = document.execCommand('copy')
+            textarea.remove()
+            return copied
+          } catch (_error) {
+            return false
+          }
+        }
+
+        async function copyHttpUrl() {
+          const httpUrl = buildHttpCalendarUrl(
+            location.origin,
+            code.textContent
+          )
+          let copied = copyWithTextarea(httpUrl)
+
+          if (navigator.clipboard?.writeText) {
+            try {
+              await Promise.race([
+                navigator.clipboard.writeText(httpUrl),
+                new Promise((_, reject) =>
+                  setTimeout(() => reject(new Error('Clipboard timeout')), 500)
+                ),
+              ])
+              copied = true
+            } catch (_error) {
+              // Keep the synchronous fallback result.
+            }
+          }
+
+          copyButton.textContent = copied ? 'Copied' : 'Copy failed'
+
+          setTimeout(() => {
+            copyButton.textContent = 'Copy'
+          }, 1500)
+        }
+
+        copyButton.addEventListener('click', copyHttpUrl)
 
         inputs.forEach(input => {
           input.addEventListener('change', updateUrl)

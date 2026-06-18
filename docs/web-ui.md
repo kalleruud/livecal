@@ -24,6 +24,9 @@ scrollbar indicators hidden.
 
 Generated calendar endpoint URLs stay on one line and can be scrolled
 horizontally when the selected filters make them wider than the available card.
+The Copy button copies the current filtered calendar URL with the page's `http:`
+or `https:` scheme for clients that do not recognize `webcal:` links. The
+Subscribe button continues to use `webcal:`.
 
 The search field supports these keyboard controls:
 
